@@ -172,6 +172,7 @@ research-workflow/
 ├── papers/           # PDFs (Zotero or manual)
 ├── markdown/         # Converted text (auto-generated)
 ├── summaries/        # AI summaries (auto-generated)
+├── sample-thesis/    # Example LaTeX thesis for testing
 ├── src/
 │   ├── search.py     # Local search/read/verify
 │   ├── web_search.py # Web search (Scholar/arXiv/Brave)
@@ -183,6 +184,28 @@ research-workflow/
 ├── config.yaml       # Your settings
 └── CLAUDE.md         # Instructions for Claude Code
 ```
+
+## Sample Thesis
+
+A minimal LaTeX thesis is included for testing:
+
+```bash
+cd sample-thesis
+
+# Download a paper cited in the thesis
+python ../src/download.py arxiv "1706.03762"
+
+# Verify the citation
+python ../src/search.py verify vaswani2017 "achieved 28.4 BLEU"
+
+# Check all citations
+python ../src/citation_checker.py . references.bib --no-verify
+
+# Build PDF (requires LaTeX)
+latexmk -pdf main.tex
+```
+
+See `sample-thesis/README.md` for full testing guide.
 
 ## Troubleshooting
 

@@ -1,0 +1,67 @@
+\chapter{Results}
+\label{ch:results}
+
+\section{Main Results}
+
+% TODO: Present your main findings
+Table~\ref{tab:main-results} presents our main experimental results.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\hline
+\textbf{Model} & \textbf{Accuracy} & \textbf{F1} & \textbf{BLEU} \\
+\hline
+Baseline & 78.3 & 0.76 & 24.1 \\
+Our Method & \textbf{85.7} & \textbf{0.84} & \textbf{31.2} \\
+\hline
+\end{tabular}
+\caption{Main experimental results on the test set.}
+\label{tab:main-results}
+\end{table}
+
+\section{Comparison with Baselines}
+
+Our approach outperforms existing methods by a significant margin.
+Compared to the baseline transformer \citep{vaswani2017attention},
+we achieve a 7.1 BLEU improvement.
+
+% VERIFY: This claim should match the table data above
+
+\section{Ablation Study}
+
+To understand the contribution of each component...
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\hline
+\textbf{Configuration} & \textbf{Accuracy} \\
+\hline
+Full Model & 85.7 \\
+- Component A & 82.1 \\
+- Component B & 83.4 \\
+- Component C & 81.9 \\
+\hline
+\end{tabular}
+\caption{Ablation study results.}
+\label{tab:ablation}
+\end{table}
+
+\section{Qualitative Analysis}
+
+% TODO: Add qualitative examples
+Figure~\ref{fig:example} shows an example of...
+
+\section{Discussion}
+
+Our results demonstrate that...
+
+\subsection{Limitations}
+
+This study has several limitations:
+\begin{itemize}
+    \item Limited dataset size
+    \item Domain-specific training data
+    \item Computational constraints
+\end{itemize}

@@ -1,0 +1,41 @@
+\chapter{Related Work}
+\label{ch:related-work}
+
+\section{Transformer Architectures}
+
+The transformer architecture was introduced by \citet{vaswani2017attention},
+achieving state-of-the-art results on machine translation tasks.
+The original model achieved 28.4 BLEU on the WMT 2014 English-to-German
+translation benchmark.
+
+% EXAMPLE: This citation should be verified using:
+% python src/search.py verify vaswani2017 "achieved 28.4 BLEU on WMT 2014"
+
+Self-attention mechanisms allow the model to attend to all positions
+in the input sequence simultaneously, unlike recurrent architectures
+which process tokens sequentially.
+
+\section{Vision Transformers}
+
+\citet{dosovitskiy2020image} demonstrated that transformers can achieve
+competitive results on image classification when trained on large datasets.
+Their Vision Transformer (ViT) model processes images as sequences of patches.
+
+% EXAMPLE: Download and verify this paper:
+% python src/download.py arxiv "2010.11929"
+% python src/search.py verify dosovitskiy2020 "processes images as sequences of patches"
+
+\section{Language Models}
+
+Large language models have shown remarkable capabilities across diverse tasks.
+% TODO: Add citations for GPT, BERT, etc.
+
+\section{AI-Assisted Writing}
+
+Recent work has explored using language models for academic writing assistance.
+% TODO: Add relevant citations
+
+\section{Summary}
+
+This chapter reviewed the key developments in transformer architectures
+and their applications. The next chapter describes our methodology.

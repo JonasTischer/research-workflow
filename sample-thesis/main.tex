@@ -1,0 +1,43 @@
+\documentclass[12pt,a4paper]{report}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{geometry}
+\usepackage{setspace}
+
+% Page setup
+\geometry{margin=2.5cm}
+\onehalfspacing
+
+% Title
+\title{Sample Thesis:\\Using AI for Academic Writing}
+\author{Your Name}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This is a sample thesis structure for testing the research-workflow tools.
+It demonstrates how to organize chapters, include citations, and verify
+claims against source papers.
+\end{abstract}
+
+\tableofcontents
+
+\include{chapters/introduction}
+\include{chapters/related-work}
+\include{chapters/methodology}
+\include{chapters/results}
+\include{chapters/conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

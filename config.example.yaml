@@ -1,0 +1,52 @@
+# Thesis Workflow Configuration
+
+# Directories (relative to this file or absolute paths)
+paths:
+  papers: ./papers          # Where Zotero/ZotFile drops PDFs
+  markdown: ./markdown      # Converted markdown files
+  summaries: ./summaries    # AI-generated summaries
+
+# PDF to Markdown conversion (Marker)
+converter:
+  # Marker settings
+  batch_multiplier: 2       # Parallel processing
+  max_pages: null           # null = no limit
+  languages: ["en"]         # OCR languages if needed
+
+# Summarization (Claude)
+summarizer:
+  model: claude-sonnet-4-20250514
+  max_tokens: 1500
+  prompt: |
+    Summarize this academic paper concisely. Include:
+    
+    1. **Main Contribution**: What's the key innovation/finding? (2-3 sentences)
+    2. **Method**: How did they do it? (2-3 sentences)  
+    3. **Results**: Key quantitative results or findings
+    4. **Relevance**: What problems does this solve? Who should read this?
+    5. **Citation**: BibTeX key suggestion based on author/year/title
+    
+    Be concise but precise. Use technical language appropriate for a PhD thesis.
+
+# Google Cloud (for semantic search)
+google:
+  project_id: your-project-id
+  location: us-central1
+  # Vertex AI Search corpus (if using Vertex)
+  corpus_id: null
+  # Or use Gemini File API directly
+  use_gemini_files: true
+
+# API Keys (better to use environment variables)
+# anthropic_api_key: sk-ant-...  # or set ANTHROPIC_API_KEY env var
+# google_credentials: /path/to/service-account.json  # or use gcloud auth
+
+# Watcher settings
+watcher:
+  poll_interval: 5          # seconds between checks
+  process_existing: true    # process existing PDFs on startup
+  
+# Logging
+logging:
+  level: INFO               # DEBUG, INFO, WARNING, ERROR
+  file: ./logs/watcher.log  # null = stdout only

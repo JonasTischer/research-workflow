@@ -1,0 +1,30 @@
+# Papers and generated content (user-specific)
+papers/
+markdown/
+summaries/
+logs/
+
+# Config with secrets
+config.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Marker output artifacts
+*.png
+*.jpg

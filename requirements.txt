@@ -1,0 +1,19 @@
+# PDF Processing
+marker-pdf>=0.2.0
+pymupdf>=1.23.0
+
+# File watching
+watchdog>=3.0.0
+
+# AI APIs
+anthropic>=0.18.0
+google-cloud-aiplatform>=1.38.0
+google-generativeai>=0.3.0
+
+# MCP Server
+mcp>=0.9.0
+
+# Utilities
+pyyaml>=6.0
+python-dotenv>=1.0.0
+rich>=13.0.0  # Pretty console output

@@ -10,54 +10,51 @@ cd research-workflow
 ./scripts/setup.sh
 
 # Add to ~/.zshrc:
-export GOOGLE_API_KEY="..."    # Get from aistudio.google.com/apikey
-export BRAVE_API_KEY="..."     # Optional, from brave.com/search/api
+export GOOGLE_API_KEY="..."    # aistudio.google.com/apikey
+export BRAVE_API_KEY="..."     # Optional: brave.com/search/api
 
 # Start watcher
 ./scripts/install-watcher.sh
 ```
 
-No Anthropic API key needed — Claude Code does summaries and verification directly.
+## Subagents
 
-## Scripts (For Search & Download)
+Native Claude Code subagents in `.claude/agents/`:
+
+| Agent | Purpose | Trigger |
+|-------|---------|---------|
+| **verifier** | Check citation claims | "Verify this claim..." |
+| **researcher** | Find & summarize papers | "Find papers about..." |
+
+Claude auto-delegates based on your request.
+
+## CLI Tools (External Operations)
 
 ```bash
-# Find papers
+# Web search
 python src/web_search.py scholar "query"
 python src/web_search.py arxiv "query"
 
-# Download
+# Download papers
 python src/download.py arxiv "1706.03762"
 python src/download.py doi "10.1000/xyz"
-```
 
-## Claude Code Does Directly
-
-**Read papers:**
-```bash
-cat markdown/paper_name.md
-ls markdown/
-```
-
-**Summarize:** Read the markdown, write to `summaries/paper_name.summary.md`
-
-**Verify citations:** Read the paper, check if claim matches source
-
-**Search within papers:**
-```bash
-grep -r "attention" markdown/
+# List/read local papers
+python src/search.py list
+python src/search.py read <name>
 ```
 
 ## Workflow
 
-1. Search → `python src/web_search.py scholar "topic"`
-2. Download → `python src/download.py arxiv "id"`
-3. Read → `cat markdown/paper_name.md`
-4. Summarize → Claude writes to `summaries/`
-5. Write → Draft with citations
-6. Verify → Claude re-reads paper, confirms claim
-7. Commit → Entire captures reasoning
+1. **Search** → "Find papers about transformers" (researcher subagent)
+2. **Download** → `python src/download.py arxiv "id"`
+3. **Read** → `cat markdown/paper_name.md`
+4. **Write** → Draft with citations
+5. **Verify** → "Verify this claim against paper" (verifier subagent)
+6. **Commit** → Entire captures reasoning
 
 ## Key Principle
 
-Claude Code reads the markdown files directly — no API calls needed for understanding, summarizing, or verifying papers. Scripts are only for external operations (web search, downloads, PDF conversion).
+- **Subagents** handle research and verification
+- **CLI tools** handle external operations (downloads, web search)
+- **Claude Code** reads files directly for understanding

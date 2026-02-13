@@ -5,9 +5,10 @@ CLI for searching and reading papers.
 Usage:
     python search.py find "attention mechanisms"
     python search.py read vaswani2017
-    python search.py summary vaswani2017
     python search.py list
-    python search.py verify vaswani2017 "Transformers achieved 28.4 BLEU"
+
+Note: Citation verification is handled by the verifier subagent.
+      Just ask Claude: "Verify this claim against [paper]"
 """
 
 import os
@@ -19,7 +20,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from google_search import GooglePaperSearch
-from citation_checker import verify_claim_against_paper, Citation
 
 
 def get_dirs():
@@ -150,58 +150,6 @@ def cmd_summary(args):
     print(summary_path.read_text(encoding="utf-8"))
 
 
-def cmd_verify(args):
-    """Verify a citation claim against paper."""
-    dirs = get_dirs()
-    
-    # Find paper
-    md_path = dirs["markdown"] / f"{args.paper}.md"
-    if not md_path.exists():
-        matches = list(dirs["markdown"].glob(f"*{args.paper}*.md"))
-        matches = [m for m in matches if not m.name.endswith(".summary.md")]
-        if matches:
-            md_path = matches[0]
-        else:
-            print(f"❌ Paper not found: {args.paper}", file=sys.stderr)
-            sys.exit(1)
-    
-    paper_content = md_path.read_text(encoding="utf-8")
-    
-    citation = Citation(
-        key=args.paper,
-        context=args.claim,
-        file=Path("thesis.tex"),
-        line=0,
-    )
-    
-    print(f"Verifying claim against: {md_path.name}\n")
-    
-    verified, confidence, quote, notes = verify_claim_against_paper(
-        citation, paper_content
-    )
-    
-    # Output
-    if verified is True:
-        print("✅ VERIFIED")
-    elif verified is False:
-        print("❌ NOT VERIFIED")
-    else:
-        print("⚠️ UNCLEAR")
-    
-    print(f"Confidence: {confidence:.0%}\n")
-    
-    print("Claim:")
-    print(f"  {args.claim}\n")
-    
-    print("Supporting quote:")
-    print(f"  {quote}\n")
-    
-    print(f"Notes: {notes}")
-    
-    if verified is False:
-        sys.exit(1)
-
-
 def cmd_upload(args):
     """Upload papers to Google for search indexing."""
     dirs = get_dirs()
@@ -242,9 +190,10 @@ Examples:
   %(prog)s read vaswani2017
   %(prog)s read vaswani2017 --section "Results"
   %(prog)s summary vaswani2017
-  %(prog)s verify vaswani2017 "Transformers achieved 28.4 BLEU on WMT 2014"
   %(prog)s upload                    # Upload all papers to Google
-  %(prog)s upload vaswani2017        # Upload single paper
+
+Note: For citation verification, use the verifier subagent.
+      Just ask Claude: "Verify this claim against vaswani2017"
         """,
     )
     
@@ -270,12 +219,6 @@ Examples:
     p_summary = subparsers.add_parser("summary", help="Read paper summary")
     p_summary.add_argument("name", help="Paper name")
     p_summary.set_defaults(func=cmd_summary)
-    
-    # verify
-    p_verify = subparsers.add_parser("verify", help="Verify citation claim")
-    p_verify.add_argument("paper", help="Paper name")
-    p_verify.add_argument("claim", help="Claim to verify")
-    p_verify.set_defaults(func=cmd_verify)
     
     # upload
     p_upload = subparsers.add_parser("upload", help="Upload papers to Google")

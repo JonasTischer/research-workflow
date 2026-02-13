@@ -79,25 +79,15 @@ python src/watcher.py
 python src/watcher.py --once
 ```
 
-### 6. Claude Code MCP Setup
+### 6. Start the Watcher
 
-Add to your Claude Code MCP config (`~/.claude/claude_desktop_config.json`):
+```bash
+# Process existing papers and watch for new ones
+python src/watcher.py
 
-```json
-{
-  "mcpServers": {
-    "thesis": {
-      "command": "python",
-      "args": ["/path/to/thesis-workflow/src/mcp_server.py"],
-      "env": {
-        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/credentials.json"
-      }
-    }
-  }
-}
+# Or just process existing papers once
+python src/watcher.py --once
 ```
-
-Now Claude Code can use `search_papers("query")` to find relevant papers.
 
 ## Usage
 
@@ -111,25 +101,56 @@ Now Claude Code can use `search_papers("query")` to find relevant papers.
    - Generates summary → `summaries/paper-name.summary.md`
    - Uploads to Google corpus for search indexing
 
-### Writing with Claude
+### CLI Commands
+
+```bash
+# Search for papers
+python src/search.py find "attention mechanisms in vision transformers"
+# Found 3 relevant papers:
+# 1. dosovitskiy2020 (0.92) - Vision transformer architecture
+# 2. vaswani2017 (0.87) - Original transformer paper
+# 3. liu2021-swin (0.84) - Hierarchical vision transformer
+
+# List all papers
+python src/search.py list
+
+# Read a paper
+python src/search.py read dosovitskiy2020
+
+# Read specific section
+python src/search.py read dosovitskiy2020 --section "Results"
+
+# Read summary
+python src/search.py summary dosovitskiy2020
+
+# Verify a citation
+python src/search.py verify vaswani2017 "Transformers achieved 28.4 BLEU on WMT 2014"
+# ✅ VERIFIED (95% confidence)
+# Quote: "The big transformer model achieves 28.4 BLEU..."
+```
+
+### Writing with Claude Code
+
+Claude can use these CLI tools directly:
 
 ```
-You: "Find papers about attention mechanisms in vision transformers"
+You: "Find papers about attention in vision transformers and help me write a related work paragraph"
 
-Claude: [calls search_papers tool]
-        Found 3 relevant papers:
-        1. dosovitskiy2020-image-worth-16x16.md (0.92)
-        2. vaswani2017-attention-is-all-you-need.md (0.87)
-        3. liu2021-swin-transformer.md (0.84)
+Claude: Let me search the papers...
+        [runs: python src/search.py find "attention vision transformers"]
         
-        Let me read the most relevant one...
-        [reads markdown/dosovitskiy2020-image-worth-16x16.md]
+        Found dosovitskiy2020 as most relevant. Reading it...
+        [runs: python src/search.py read dosovitskiy2020]
         
-        Based on this paper, here's a paragraph for your related work section:
+        Here's a paragraph for your related work:
         
         "Vision Transformers (ViT) demonstrated that pure transformer 
         architectures can achieve state-of-the-art results on image 
         classification \cite{dosovitskiy2020image}..."
+        
+        Let me verify this citation...
+        [runs: python src/search.py verify dosovitskiy2020 "pure transformer..."]
+        ✅ Verified
 ```
 
 ## Citation Verification
@@ -149,19 +170,24 @@ chmod +x .git/hooks/pre-commit
 - Every `\cite{key}` has a matching entry in `.bib`
 - Optionally verifies claims against paper content (set `VERIFY_CLAIMS=1`)
 
-### MCP Tool: verify_citation
+### On-Demand Verification
 
-Claude Code can verify citations on-demand during writing:
+Verify any claim before finalizing a citation:
 
-```
-You: "Verify this citation: Transformers achieved 28.4 BLEU on WMT 2014 \cite{vaswani2017}"
+```bash
+python src/search.py verify vaswani2017 "Transformers achieved 28.4 BLEU on WMT 2014"
 
-Claude: [calls verify_citation tool]
-        ✅ VERIFIED (95% confidence)
-        
-        Supporting quote from paper:
-        > "The big transformer model achieves 28.4 BLEU on the WMT 2014 
-        > English-to-German translation task"
+# ✅ VERIFIED
+# Confidence: 95%
+#
+# Claim:
+#   Transformers achieved 28.4 BLEU on WMT 2014
+#
+# Supporting quote:
+#   "The big transformer model achieves 28.4 BLEU on the WMT 2014 
+#   English-to-German translation task"
+#
+# Notes: Exact match found in Results section
 ```
 
 ### CLI Usage
@@ -184,15 +210,20 @@ thesis-workflow/
 ├── papers/              # Raw PDFs (Zotero/ZotFile managed)
 ├── markdown/            # Converted markdown (full papers)
 ├── summaries/           # AI-generated summaries
+├── hooks/               # Git hooks for citation verification
+│   ├── pre-commit       # Blocks commits with missing citations
+│   └── post-commit      # Async full verification
 ├── src/
 │   ├── watcher.py       # PDF watcher + processor
-│   ├── mcp_server.py    # MCP server for Claude Code
-│   ├── converter.py     # Marker wrapper
+│   ├── search.py        # CLI for search/read/verify
+│   ├── converter.py     # Marker PDF→MD wrapper
 │   ├── summarizer.py    # Claude summarization
+│   ├── citation_checker.py  # Citation verification
 │   └── google_search.py # Google File Search client
 ├── config.yaml          # Your configuration
 ├── config.example.yaml  # Template
 ├── requirements.txt
+├── SKILL.md             # Quick reference for Claude
 └── README.md
 ```
 

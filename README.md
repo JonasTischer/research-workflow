@@ -132,6 +132,51 @@ Claude: [calls search_papers tool]
         classification \cite{dosovitskiy2020image}..."
 ```
 
+## Citation Verification
+
+The workflow includes automatic citation checking to prevent hallucinated or incorrect citations.
+
+### Git Hooks
+
+Install the pre-commit hook to catch issues before they're committed:
+
+```bash
+cp hooks/pre-commit .git/hooks/
+chmod +x .git/hooks/pre-commit
+```
+
+**What it checks:**
+- Every `\cite{key}` has a matching entry in `.bib`
+- Optionally verifies claims against paper content (set `VERIFY_CLAIMS=1`)
+
+### MCP Tool: verify_citation
+
+Claude Code can verify citations on-demand during writing:
+
+```
+You: "Verify this citation: Transformers achieved 28.4 BLEU on WMT 2014 \cite{vaswani2017}"
+
+Claude: [calls verify_citation tool]
+        ✅ VERIFIED (95% confidence)
+        
+        Supporting quote from paper:
+        > "The big transformer model achieves 28.4 BLEU on the WMT 2014 
+        > English-to-German translation task"
+```
+
+### CLI Usage
+
+```bash
+# Quick check: verify all citation keys exist
+python src/citation_checker.py ./chapters ./references.bib --no-verify
+
+# Full check: verify claims against papers (slower)
+python src/citation_checker.py ./chapters ./references.bib --markdown-dir ./markdown
+
+# JSON output for CI
+python src/citation_checker.py ./chapters ./references.bib --json
+```
+
 ## Folder Structure
 
 ```

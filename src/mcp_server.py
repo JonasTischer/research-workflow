@@ -18,6 +18,7 @@ from mcp.types import Tool, TextContent
 sys.path.insert(0, str(Path(__file__).parent))
 
 from google_search import GooglePaperSearch, SearchResult
+from citation_checker import verify_claim_against_paper, Citation
 
 # Initialize server
 server = Server("thesis-workflow")
@@ -113,6 +114,24 @@ async def list_tools() -> list[Tool]:
                     },
                 },
                 "required": ["name", "query"],
+            },
+        ),
+        Tool(
+            name="verify_citation",
+            description="Verify that a claim is actually supported by the cited paper. Use before finalizing any citation.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "paper_name": {
+                        "type": "string",
+                        "description": "Name of the paper being cited",
+                    },
+                    "claim": {
+                        "type": "string",
+                        "description": "The claim/statement being attributed to this paper",
+                    },
+                },
+                "required": ["paper_name", "claim"],
             },
         ),
     ]
@@ -246,6 +265,67 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             
         except Exception as e:
             return [TextContent(type="text", text=f"Search error: {e}")]
+    
+    elif name == "verify_citation":
+        paper_name = arguments["paper_name"]
+        claim = arguments["claim"]
+        
+        # Find paper markdown
+        md_path = MARKDOWN_DIR / f"{paper_name}.md"
+        if not md_path.exists():
+            matches = list(MARKDOWN_DIR.glob(f"*{paper_name}*.md"))
+            if matches:
+                md_path = matches[0]
+            else:
+                return [TextContent(
+                    type="text",
+                    text=f"❌ Cannot verify: paper '{paper_name}' not found in markdown directory.\n\nAdd the paper first, then verify.",
+                )]
+        
+        try:
+            paper_content = md_path.read_text(encoding="utf-8")
+            
+            # Create a mock citation for verification
+            citation = Citation(
+                key=paper_name,
+                context=claim,
+                file=Path("thesis.tex"),
+                line=0,
+            )
+            
+            verified, confidence, quote, notes = verify_claim_against_paper(
+                citation, paper_content
+            )
+            
+            # Format result
+            if verified is True:
+                status = "✅ VERIFIED"
+            elif verified is False:
+                status = "❌ NOT VERIFIED"
+            else:
+                status = "⚠️ UNCLEAR"
+            
+            result = f"""## Citation Verification: {paper_name}
+
+**Status:** {status}
+**Confidence:** {confidence:.0%}
+
+**Claim being checked:**
+> {claim}
+
+**Supporting quote from paper:**
+> {quote}
+
+**Notes:** {notes}
+"""
+            
+            if verified is False:
+                result += "\n\n⚠️ **Action needed:** Revise the claim or find a different source."
+            
+            return [TextContent(type="text", text=result)]
+            
+        except Exception as e:
+            return [TextContent(type="text", text=f"Verification error: {e}")]
     
     return [TextContent(type="text", text=f"Unknown tool: {name}")]
 

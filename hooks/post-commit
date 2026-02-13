@@ -1,0 +1,33 @@
+#!/bin/bash
+# Post-commit hook for async citation verification
+# Runs full verification in background after commit
+
+set -e
+
+# Only run if ASYNC_VERIFY is enabled
+if [ "$ASYNC_VERIFY" != "1" ]; then
+    exit 0
+fi
+
+THESIS_DIR="${THESIS_DIR:-./chapters}"
+BIB_FILE="${BIB_FILE:-./references.bib}"
+MARKDOWN_DIR="${MARKDOWN_DIR:-./markdown}"
+LOG_FILE=".citation-check.log"
+
+echo "Starting async citation verification..."
+
+# Run verification in background
+(
+    python src/citation_checker.py "$THESIS_DIR" "$BIB_FILE" \
+        --markdown-dir "$MARKDOWN_DIR" \
+        > "$LOG_FILE" 2>&1
+    
+    # Check result
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "⚠️  Citation issues found! Check $LOG_FILE"
+        echo ""
+    fi
+) &
+
+echo "Verification running in background. Results in $LOG_FILE"

@@ -65,18 +65,48 @@ Format:
 
 ## Verifying Citations
 
-**You verify directly** — read the paper and check the claim:
+**You verify directly** — read the paper and assess whether the claim is accurate:
 
 1. Read the paper: `cat markdown/paper_name.md`
-2. Search for relevant section
-3. Confirm the claim matches the source
+2. Understand what the paper actually claims
+3. Compare to what the thesis says about it
 
-Before writing any `\cite{key}`:
-- Read the actual paper
-- Find the supporting quote
-- Ensure your claim accurately reflects the source
+### What to Check
 
-If you can't verify → say so, suggest alternatives.
+| Check | Question |
+|-------|----------|
+| **Accuracy** | Does the claim correctly represent the paper's findings? |
+| **Context** | Is the claim taken out of context? |
+| **Scope** | Is the thesis overclaiming or overgeneralizing? |
+| **Nuance** | Does the paper have caveats the thesis ignores? |
+| **Attribution** | Is this the original source, or should an earlier paper be cited? |
+
+### Examples
+
+**Good citation:**
+> "Transformers achieved state-of-the-art results on translation tasks \cite{vaswani2017}"
+
+Check: Paper claims 28.4 BLEU on WMT 2014, which was SOTA at the time. ✅
+
+**Overclaiming:**
+> "Transformers are always better than RNNs \cite{vaswani2017}"
+
+Check: Paper only tested on translation. Doesn't claim universal superiority. ❌
+
+**Missing nuance:**
+> "ViT outperforms CNNs on image classification \cite{dosovitskiy2020}"
+
+Check: Paper says this only holds with large-scale pretraining. Needs qualifier. ⚠️
+
+### Verification Process
+
+1. Read the thesis claim carefully
+2. Read the cited paper (especially abstract, results, limitations)
+3. Ask: "Would the paper's authors agree with this characterization?"
+4. If uncertain, quote directly or add qualifiers
+5. If wrong, revise the claim or find a better source
+
+If you can't verify → say so, suggest alternatives, or recommend reading a specific section.
 
 ## Workflow
 

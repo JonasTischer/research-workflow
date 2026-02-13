@@ -81,22 +81,27 @@ python src/search.py find "attention mechanisms"    # Semantic search
 
 ### Verify Citations
 
-**Option 1: Quick verification**
-```bash
-# Claude Code reads the paper and verifies directly
-cat markdown/vaswani2017.md  # Read paper
-# Then ask Claude to verify your claim
-```
+Just ask Claude to verify — it automatically uses the verifier subagent:
 
-**Option 2: Verification subagent** (thorough)
-```bash
-./scripts/verify-claim.sh vaswani2017 "achieved 28.4 BLEU on WMT 2014"
+```
+"Verify that vaswani2017 supports 'achieved 28.4 BLEU on WMT 2014'"
 ```
 
 Returns:
 - ✅ VERIFIED — claim is accurate
-- ⚠️ NEEDS REVISION — needs changes
+- ⚠️ NEEDS REVISION — needs changes  
 - ❌ INCORRECT — doesn't match paper
+
+## Subagents
+
+Native Claude Code subagents in `.claude/agents/`:
+
+| Agent | Purpose | Model |
+|-------|---------|-------|
+| **verifier** | Check citation claims against papers | Haiku (fast) |
+| **researcher** | Find and summarize papers | Sonnet |
+
+Claude automatically delegates to the right subagent based on your request.
 
 ### Batch Verification
 

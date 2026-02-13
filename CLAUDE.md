@@ -117,23 +117,28 @@ If you can't verify → say so, suggest alternatives, or recommend reading a spe
 5. **Verify** → Use verification subagent (see below)
 6. **Commit** → Entire captures your reasoning
 
-## Verification Subagent
+## Subagents
 
-For thorough citation verification, spawn a dedicated subagent:
+This project includes native Claude Code subagents in `.claude/agents/`:
 
-```bash
-./scripts/verify-claim.sh vaswani2017 "achieved 28.4 BLEU on WMT 2014"
+### Verifier
+Checks citation claims against papers. Claude auto-delegates when you ask to verify.
+
+```
+"Verify that vaswani2017 supports the claim 'achieved 28.4 BLEU'"
 ```
 
-Or spawn directly:
-```bash
-claude --print "Verify: [claim] against [paper]. Follow agents/verifier/CLAUDE.md"
+Returns: ✅ VERIFIED | ⚠️ NEEDS REVISION | ❌ INCORRECT
+
+### Researcher  
+Finds and summarizes papers. Claude auto-delegates for research tasks.
+
+```
+"Find papers about attention mechanisms in vision transformers"
+"Summarize the dosovitskiy2020 paper"
 ```
 
-The verifier returns:
-- ✅ VERIFIED — claim is accurate
-- ⚠️ NEEDS REVISION — partially correct, needs changes
-- ❌ INCORRECT — claim doesn't match paper
+Claude automatically chooses the right subagent based on your request.
 
 ## Citation Rules
 

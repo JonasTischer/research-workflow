@@ -1,5 +1,13 @@
-"""PDF to Markdown conversion using Marker."""
+"""PDF to Markdown conversion using Marker.
 
+Supports LLM-enhanced mode with Gemini Flash for higher accuracy on:
+- Tables spanning multiple pages
+- Inline math formatting
+- Form value extraction
+- Complex table structures
+"""
+
+import os
 import subprocess
 from pathlib import Path
 from rich.console import Console
@@ -13,6 +21,9 @@ def convert_pdf_to_markdown(
     batch_multiplier: int = 2,
     max_pages: int | None = None,
     languages: list[str] | None = None,
+    use_llm: bool = True,
+    force_ocr: bool = False,
+    redo_inline_math: bool = False,
 ) -> Path | None:
     """
     Convert a PDF to markdown using Marker.
@@ -23,6 +34,9 @@ def convert_pdf_to_markdown(
         batch_multiplier: Parallel processing factor
         max_pages: Maximum pages to process (None = all)
         languages: List of OCR languages
+        use_llm: Use Gemini Flash for higher accuracy (recommended)
+        force_ocr: Force OCR on all pages (use for scanned docs or inline math)
+        redo_inline_math: Highest quality inline math (requires use_llm)
         
     Returns:
         Path to the generated markdown file, or None if failed
@@ -36,6 +50,21 @@ def convert_pdf_to_markdown(
         "--output_dir", str(output_dir),
         "--batch_multiplier", str(batch_multiplier),
     ]
+    
+    # LLM mode for higher accuracy (uses Gemini Flash by default)
+    if use_llm:
+        # Check for API key
+        if os.environ.get("GOOGLE_API_KEY"):
+            cmd.append("--use_llm")
+            console.print("[dim]Using Gemini Flash for enhanced accuracy[/dim]")
+        else:
+            console.print("[yellow]GOOGLE_API_KEY not set, skipping LLM enhancement[/yellow]")
+    
+    if force_ocr:
+        cmd.append("--force_ocr")
+    
+    if redo_inline_math and use_llm:
+        cmd.append("--redo_inline_math")
     
     if max_pages:
         cmd.extend(["--max_pages", str(max_pages)])

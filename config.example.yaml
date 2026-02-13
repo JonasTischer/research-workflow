@@ -8,10 +8,14 @@ paths:
 
 # PDF to Markdown conversion (Marker)
 converter:
-  # Marker settings
   batch_multiplier: 2       # Parallel processing
   max_pages: null           # null = no limit
   languages: ["en"]         # OCR languages if needed
+  
+  # LLM Enhancement (Gemini Flash) - highly recommended for academic papers
+  use_llm: true             # Uses Gemini Flash for higher accuracy
+  force_ocr: false          # Force OCR on all pages (for scanned PDFs)
+  redo_inline_math: false   # Highest quality inline math (slower)
 
 # Summarization (Claude)
 summarizer:

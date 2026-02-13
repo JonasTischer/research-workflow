@@ -92,9 +92,22 @@ python src/search.py upload
 ## Directory Structure
 
 - `papers/` - Raw PDFs
-- `markdown/` - Converted markdown (full text)
+- `markdown/` - Converted markdown (full text, enhanced with Gemini Flash)
 - `summaries/` - AI-generated summaries
 - `references.bib` - Citation database (auto-managed by Zotero)
+
+## PDF Conversion
+
+Papers are converted using Marker + Gemini 2.0 Flash for high accuracy:
+- Tables (including multi-page) are properly formatted
+- Inline math is converted to LaTeX
+- Academic paper layouts handled well
+
+If markdown looks wrong, the paper can be re-converted with:
+```bash
+rm markdown/paper_name.md
+python src/watcher.py --once
+```
 
 ## Example Session
 

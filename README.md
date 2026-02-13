@@ -160,9 +160,35 @@ tail -f logs/watcher.log
 The watcher:
 - Runs automatically on login
 - Watches `~/Papers` for new PDFs
-- Converts to markdown via Marker
+- Converts to markdown via Marker + **Gemini Flash** (for higher accuracy)
 - Generates AI summaries via Claude
 - Uploads to Google for search indexing
+
+### PDF Conversion Quality
+
+Marker uses **Gemini 2.0 Flash** by default for enhanced conversion accuracy:
+
+- ✅ Tables spanning multiple pages (merged correctly)
+- ✅ Complex table structures
+- ✅ Inline math (properly formatted as LaTeX)
+- ✅ Form value extraction
+- ✅ Better handling of academic paper layouts
+
+This is enabled by default when `GOOGLE_API_KEY` is set. To disable:
+
+```yaml
+# config.yaml
+converter:
+  use_llm: false
+```
+
+For scanned PDFs or documents with lots of math:
+
+```yaml
+converter:
+  force_ocr: true        # Force OCR on all pages
+  redo_inline_math: true # Highest quality math (slower)
+```
 
 ## Usage
 

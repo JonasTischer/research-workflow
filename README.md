@@ -24,6 +24,31 @@ PDF → Zotero → ZotFile saves to papers/
 
 ## Setup
 
+### 0. Entire (Recommended)
+
+Capture AI reasoning alongside your commits with [Entire](https://entire.io):
+
+```bash
+# Install
+curl -fsSL https://entire.io/install.sh | bash
+
+# Initialize in your thesis repo
+cd ~/thesis
+entire init
+
+# That's it — sessions auto-capture on commit
+```
+
+**Why:** When Claude helps write a paragraph or suggests a citation, Entire captures the full conversation. Months later you can trace back *why* something was written that way.
+
+```bash
+# See what AI session produced a commit
+entire explain --commit HEAD
+
+# Browse all checkpoints
+entire rewind
+```
+
 ### 1. Prerequisites
 
 ```bash

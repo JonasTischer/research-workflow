@@ -23,7 +23,13 @@ from rich.console import Console
 from rich.panel import Panel
 
 from converter import convert_pdf_to_markdown
-from summarizer import summarize_paper
+
+# Summarization is optional - Claude Code can do this directly
+try:
+    from summarizer import summarize_paper
+    HAS_SUMMARIZER = True
+except ImportError:
+    HAS_SUMMARIZER = False
 
 console = Console()
 
@@ -121,19 +127,23 @@ class PaperHandler(FileSystemEventHandler):
         else:
             console.print(f"[dim]Markdown exists:[/dim] {md_path.name}")
         
-        # Step 2: Generate summary
+        # Step 2: Generate summary (optional - Claude Code can do this directly)
         summary_path = self.summary_dir / f"{pdf_path.stem}.summary.md"
         
-        if not summary_path.exists():
-            summary_path = summarize_paper(
-                md_path,
-                self.summary_dir,
-                **self.summarizer_config,
-            )
-            
-            if not summary_path:
-                console.print(f"[yellow]⚠ Summary failed, continuing[/yellow]")
-        else:
+        if not summary_path.exists() and HAS_SUMMARIZER and self.summarizer_config:
+            import os
+            if os.environ.get("ANTHROPIC_API_KEY"):
+                summary_path = summarize_paper(
+                    md_path,
+                    self.summary_dir,
+                    **self.summarizer_config,
+                )
+                
+                if not summary_path:
+                    console.print(f"[yellow]⚠ Summary failed, continuing[/yellow]")
+            else:
+                console.print(f"[dim]Skipping auto-summary (Claude Code can summarize on demand)[/dim]")
+        elif summary_path.exists():
             console.print(f"[dim]Summary exists:[/dim] {summary_path.name}")
         
         # Step 3: Upload to Google (optional)

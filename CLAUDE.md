@@ -1,86 +1,116 @@
 # Research Workflow
 
-You're helping write an academic thesis. This workspace has tools for finding, reading, and citing papers correctly.
-
-## Quick Reference
-
-```bash
-# Always run from project root with venv active
-cd /path/to/research-workflow && source .venv/bin/activate
-```
-
-### Find Papers (Web)
-
-```bash
-python src/web_search.py scholar "attention mechanisms"     # Academic papers
-python src/web_search.py arxiv "vision transformer"         # Preprints  
-python src/web_search.py brave "topic" --academic           # Web search
-```
-
-### Download Papers
-
-```bash
-python src/download.py arxiv "1706.03762"                   # From arXiv
-python src/download.py doi "10.1000/example"                # From DOI
-```
-
-Downloads go to `papers/` → watcher auto-converts to markdown.
-
-### Read Papers (Local)
-
-```bash
-python src/search.py list                                   # All papers
-python src/search.py read <name>                            # Full paper
-python src/search.py read <name> --section "Methods"        # One section
-python src/search.py summary <name>                         # AI summary
-python src/search.py find "query"                           # Semantic search
-```
-
-### Verify Citations (REQUIRED)
-
-**Before citing anything, verify the claim:**
-
-```bash
-python src/search.py verify <paper> "exact claim you're making"
-```
-
-Example:
-```bash
-python src/search.py verify vaswani2017 "achieved 28.4 BLEU on WMT 2014"
-# ✅ VERIFIED (95% confidence)
-# Quote: "The big transformer model achieves 28.4 BLEU..."
-```
-
-If verification fails → revise the claim or find a different source.
-
-## Workflow
-
-1. **Search** → `web_search.py scholar "topic"` to find relevant papers
-2. **Download** → `download.py arxiv "id"` to get the PDF
-3. **Read** → `search.py read <name>` to understand the paper  
-4. **Write** → Draft paragraph with citation
-5. **Verify** → `search.py verify <paper> "claim"` before committing
-6. **Commit** → Git commit (Entire captures your reasoning)
-
-## Rules
-
-- **Never invent citations** — only cite papers in the library
-- **Always verify claims** — run `search.py verify` before any `\cite{}`
-- **Use .bib keys** — citation keys come from `references.bib` (Zotero manages this)
-- **Check your work** — if unsure about a claim, say so
+You're helping write an academic thesis. Papers are stored as markdown files you can read directly.
 
 ## Folders
 
 ```
-papers/      → PDFs (add here or via download.py)
-markdown/    → Full text (auto-converted by Marker + Gemini)
-summaries/   → AI summaries
+papers/      → PDFs 
+markdown/    → Full paper text (read these directly)
+summaries/   → Your summaries (write here)
 ```
 
-## Re-processing
+## Finding Papers
 
-If a paper's markdown looks wrong:
 ```bash
-rm markdown/<paper>.md
-python src/watcher.py --once
+# Academic search (free)
+python src/web_search.py scholar "attention mechanisms"
+python src/web_search.py arxiv "vision transformer"
+
+# Web search (needs BRAVE_API_KEY)
+python src/web_search.py brave "topic" --academic
 ```
+
+## Downloading Papers
+
+```bash
+python src/download.py arxiv "1706.03762"
+python src/download.py doi "10.1000/example"
+```
+
+Downloads go to `papers/` → watcher converts to `markdown/` automatically.
+
+## Reading Papers
+
+**Read the markdown files directly** — no script needed:
+
+```bash
+cat markdown/vaswani2017.md
+```
+
+Or read specific sections by searching within the file.
+
+To see all papers:
+```bash
+ls markdown/
+```
+
+## Summarizing Papers
+
+**You summarize directly** — read the file and write a summary:
+
+1. Read: `cat markdown/paper_name.md`
+2. Write summary to: `summaries/paper_name.summary.md`
+
+Format:
+```markdown
+# Summary: Paper Title
+
+**Main Contribution:** ...
+**Method:** ...
+**Key Results:** ...
+**Relevance:** ...
+**Citation Key:** author2024keyword
+```
+
+## Verifying Citations
+
+**You verify directly** — read the paper and check the claim:
+
+1. Read the paper: `cat markdown/paper_name.md`
+2. Search for relevant section
+3. Confirm the claim matches the source
+
+Before writing any `\cite{key}`:
+- Read the actual paper
+- Find the supporting quote
+- Ensure your claim accurately reflects the source
+
+If you can't verify → say so, suggest alternatives.
+
+## Workflow
+
+1. **Search** → `python src/web_search.py scholar "topic"`
+2. **Download** → `python src/download.py arxiv "id"`
+3. **Read** → `cat markdown/paper_name.md`
+4. **Write** → Draft paragraph with citation
+5. **Verify** → Re-read paper, confirm claim matches
+6. **Commit** → Entire captures your reasoning
+
+## Citation Rules
+
+- **Only cite papers in `markdown/`** — you must have read them
+- **Verify every claim** — re-read the source before citing
+- **Use exact quotes** — when paraphrasing, check accuracy
+- **Cite conservatively** — if unsure, say so
+
+## Batch Operations (if needed)
+
+```bash
+# List all papers
+ls markdown/*.md
+
+# Search within papers
+grep -r "attention" markdown/
+
+# Check which papers mention a topic
+grep -l "transformer" markdown/*.md
+```
+
+## Tools That Still Need Scripts
+
+| Task | Command |
+|------|---------|
+| Web search | `python src/web_search.py scholar "query"` |
+| Download | `python src/download.py arxiv "id"` |
+| Re-convert PDF | `python src/watcher.py --once` |

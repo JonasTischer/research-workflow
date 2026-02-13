@@ -36,15 +36,15 @@ cp config.example.yaml config.yaml
 Add to `~/.zshrc` or `~/.bashrc`:
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."   # For summaries
-export GOOGLE_API_KEY="..."              # For search + PDF conversion
-export BRAVE_API_KEY="..."               # Optional: web search
+export GOOGLE_API_KEY="..."    # For search + PDF conversion
+export BRAVE_API_KEY="..."     # Optional: web search
 ```
 
 Get them from:
-- Anthropic: https://console.anthropic.com/
 - Google: https://aistudio.google.com/apikey
 - Brave: https://brave.com/search/api/
+
+**Note:** Summaries and citation verification are done by Claude Code directly (no API key needed — uses your Claude Code subscription).
 
 ## Usage
 

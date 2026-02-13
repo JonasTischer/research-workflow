@@ -17,20 +17,10 @@ converter:
   force_ocr: false          # Force OCR on all pages (for scanned PDFs)
   redo_inline_math: false   # Highest quality inline math (slower)
 
-# Summarization (Claude)
-summarizer:
-  model: claude-sonnet-4-20250514
-  max_tokens: 1500
-  prompt: |
-    Summarize this academic paper concisely. Include:
-    
-    1. **Main Contribution**: What's the key innovation/finding? (2-3 sentences)
-    2. **Method**: How did they do it? (2-3 sentences)  
-    3. **Results**: Key quantitative results or findings
-    4. **Relevance**: What problems does this solve? Who should read this?
-    5. **Citation**: BibTeX key suggestion based on author/year/title
-    
-    Be concise but precise. Use technical language appropriate for a PhD thesis.
+# Summarization
+# Claude Code creates summaries directly by reading markdown files.
+# No API key needed - uses your Claude Code subscription.
+# Summaries are saved to summaries/paper_name.summary.md
 
 # Google Cloud (for semantic search)
 google:

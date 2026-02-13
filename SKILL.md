@@ -1,6 +1,6 @@
 # Research Workflow
 
-Paper management for thesis writing.
+Paper management for thesis writing with Claude Code.
 
 ## Setup
 
@@ -10,51 +10,54 @@ cd research-workflow
 ./scripts/setup.sh
 
 # Add to ~/.zshrc:
-export ANTHROPIC_API_KEY="sk-ant-..."
-export GOOGLE_API_KEY="..."
+export GOOGLE_API_KEY="..."    # Get from aistudio.google.com/apikey
+export BRAVE_API_KEY="..."     # Optional, from brave.com/search/api
 
 # Start watcher
 ./scripts/install-watcher.sh
 ```
 
-## Commands
+No Anthropic API key needed — Claude Code does summaries and verification directly.
 
-### Find & Download
+## Scripts (For Search & Download)
 
 ```bash
-python src/web_search.py scholar "query"      # Academic search
-python src/web_search.py arxiv "query"        # Preprints
-python src/download.py arxiv "1706.03762"     # Download
-python src/download.py doi "10.1000/xyz"      # From DOI
+# Find papers
+python src/web_search.py scholar "query"
+python src/web_search.py arxiv "query"
+
+# Download
+python src/download.py arxiv "1706.03762"
+python src/download.py doi "10.1000/xyz"
 ```
 
-### Read
+## Claude Code Does Directly
 
+**Read papers:**
 ```bash
-python src/search.py list                     # All papers
-python src/search.py read <name>              # Full text
-python src/search.py summary <name>           # AI summary
-python src/search.py find "query"             # Search
+cat markdown/paper_name.md
+ls markdown/
 ```
 
-### Verify
+**Summarize:** Read the markdown, write to `summaries/paper_name.summary.md`
 
+**Verify citations:** Read the paper, check if claim matches source
+
+**Search within papers:**
 ```bash
-python src/search.py verify <paper> "claim"   # Check citation
-```
-
-### Entire (Session Capture)
-
-```bash
-entire explain --commit HEAD                  # See AI reasoning
-entire rewind                                 # Browse sessions
+grep -r "attention" markdown/
 ```
 
 ## Workflow
 
-1. Search → `web_search.py scholar "topic"`
-2. Download → `download.py arxiv "id"`
-3. Read → `search.py read <name>`
-4. Write → Draft with citations
-5. Verify → `search.py verify <paper> "claim"`
-6. Commit → Entire captures reasoning
+1. Search → `python src/web_search.py scholar "topic"`
+2. Download → `python src/download.py arxiv "id"`
+3. Read → `cat markdown/paper_name.md`
+4. Summarize → Claude writes to `summaries/`
+5. Write → Draft with citations
+6. Verify → Claude re-reads paper, confirms claim
+7. Commit → Entire captures reasoning
+
+## Key Principle
+
+Claude Code reads the markdown files directly — no API calls needed for understanding, summarizing, or verifying papers. Scripts are only for external operations (web search, downloads, PDF conversion).

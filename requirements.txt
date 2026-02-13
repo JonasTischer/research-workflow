@@ -6,9 +6,8 @@ pymupdf>=1.23.0
 watchdog>=3.0.0
 
 # AI APIs
-anthropic>=0.18.0
-google-cloud-aiplatform>=1.38.0
 google-generativeai>=0.3.0
+# anthropic>=0.18.0  # Optional: only if using auto-summarize
 
 # Utilities
 pyyaml>=6.0

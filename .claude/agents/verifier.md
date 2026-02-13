@@ -1,7 +1,7 @@
 ---
 name: verifier
 description: Verifies citation claims against source papers. Use when checking if a thesis claim accurately represents what a paper says.
-tools: Read, Grep, Glob
+tools: Read, Grep, Glob, Bash
 model: haiku
 ---
 

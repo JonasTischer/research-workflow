@@ -1,12 +1,23 @@
-"""Google File Search integration for paper retrieval."""
+"""Google File Search integration for paper retrieval.
+
+Uses the new unified Google Gen AI SDK (google-genai).
+"""
 
 import os
 from pathlib import Path
 from dataclasses import dataclass
-import google.generativeai as genai
+
 from rich.console import Console
 
 console = Console()
+
+# Import the new Google Gen AI SDK
+try:
+    from google import genai
+    from google.genai import types
+except ImportError:
+    console.print("[red]Install google-genai: uv pip install google-genai[/red]")
+    raise
 
 
 @dataclass
@@ -19,7 +30,7 @@ class SearchResult:
 
 class GooglePaperSearch:
     """
-    Search papers using Google's Gemini File API.
+    Search papers using Google's Gemini API.
     
     Papers are uploaded to Gemini and can be searched semantically.
     """
@@ -27,7 +38,7 @@ class GooglePaperSearch:
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = "gemini-1.5-flash",
+        model: str = "gemini-2.0-flash",
     ):
         """
         Initialize the search client.
@@ -40,9 +51,9 @@ class GooglePaperSearch:
         if not api_key:
             raise ValueError("Google API key required (GOOGLE_API_KEY env or api_key param)")
         
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(model)
-        self.uploaded_files: dict[str, genai.File] = {}
+        self.client = genai.Client(api_key=api_key)
+        self.model_name = model
+        self.uploaded_files: dict[str, str] = {}
     
     def upload_paper(self, pdf_path: Path) -> str | None:
         """
@@ -52,30 +63,32 @@ class GooglePaperSearch:
             pdf_path: Path to the PDF file
             
         Returns:
-            File ID if successful, None otherwise
+            File URI if successful, None otherwise
         """
         try:
             console.print(f"[blue]Uploading to Google:[/blue] {pdf_path.name}")
             
-            # Upload the file
-            uploaded = genai.upload_file(
-                path=str(pdf_path),
-                display_name=pdf_path.stem,
+            # Upload the file using new SDK
+            uploaded = self.client.files.upload(
+                file=pdf_path,
+                config=types.UploadFileConfig(
+                    display_name=pdf_path.stem,
+                )
             )
             
             # Wait for processing
             import time
             while uploaded.state.name == "PROCESSING":
                 time.sleep(2)
-                uploaded = genai.get_file(uploaded.name)
+                uploaded = self.client.files.get(name=uploaded.name)
             
             if uploaded.state.name == "FAILED":
                 console.print(f"[red]Upload failed:[/red] {pdf_path.name}")
                 return None
             
-            self.uploaded_files[pdf_path.stem] = uploaded
+            self.uploaded_files[pdf_path.stem] = uploaded.uri
             console.print(f"[green]✓ Uploaded:[/green] {pdf_path.name}")
-            return uploaded.name
+            return uploaded.uri
             
         except Exception as e:
             console.print(f"[red]Upload error:[/red] {e}")
@@ -89,18 +102,18 @@ class GooglePaperSearch:
             pdf_dir: Directory containing PDFs
             
         Returns:
-            Dict mapping filenames to file IDs
+            Dict mapping filenames to file URIs
         """
         results = {}
         for pdf_path in sorted(pdf_dir.glob("*.pdf")):
-            file_id = self.upload_paper(pdf_path)
-            if file_id:
-                results[pdf_path.stem] = file_id
+            file_uri = self.upload_paper(pdf_path)
+            if file_uri:
+                results[pdf_path.stem] = file_uri
         return results
     
     def list_uploaded(self) -> list[str]:
         """List all uploaded files."""
-        files = list(genai.list_files())
+        files = list(self.client.files.list())
         return [f.display_name for f in files]
     
     def search(
@@ -119,7 +132,7 @@ class GooglePaperSearch:
             List of SearchResult objects
         """
         # Get all uploaded files
-        files = list(genai.list_files())
+        files = list(self.client.files.list())
         if not files:
             return []
         
@@ -138,7 +151,10 @@ Only include papers that are actually relevant. Score from 0.0 to 1.0.
 Return ONLY the JSON array, no other text."""
 
         try:
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+            )
             
             import json
             # Extract JSON from response
@@ -181,7 +197,7 @@ Return ONLY the JSON array, no other text."""
             List of relevant text passages
         """
         # Find the file
-        files = list(genai.list_files())
+        files = list(self.client.files.list())
         target_file = None
         for f in files:
             if f.display_name == paper_name:
@@ -199,7 +215,13 @@ Return each passage as a separate paragraph. Include page/section references if 
 Focus on exact quotes and specific details, not summaries."""
 
         try:
-            response = self.model.generate_content([target_file, prompt])
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=[
+                    types.Part.from_uri(file_uri=target_file.uri, mime_type="application/pdf"),
+                    prompt,
+                ],
+            )
             
             # Split into passages
             passages = [p.strip() for p in response.text.split("\n\n") if p.strip()]

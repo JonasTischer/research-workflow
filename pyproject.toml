@@ -11,10 +11,10 @@ authors = [
 keywords = ["research", "thesis", "citations", "ai", "claude", "academic"]
 
 dependencies = [
-    "marker-pdf>=0.2.0",
-    "pymupdf>=1.23.0",
-    "watchdog>=3.0.0",
-    "google-generativeai>=0.3.0",
+    "marker-pdf>=1.0.0",
+    "pymupdf>=1.24.0",
+    "watchdog>=4.0.0",
+    "google-genai>=1.0.0",
     "pyyaml>=6.0",
     "python-dotenv>=1.0.0",
     "rich>=13.0.0",
@@ -22,19 +22,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# For automated summaries (optional - Claude Code can do this directly)
-auto-summarize = ["anthropic>=0.18.0"]
-
-[project.optional-dependencies]
 dev = [
-    "pytest>=7.0.0",
-    "ruff>=0.1.0",
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
 ]
+# For automated summaries (optional - Claude Code can do this directly)
+auto-summarize = ["anthropic>=0.40.0"]
 
 [project.scripts]
 research-search = "src.search:main"
 research-watch = "src.watcher:main"
-research-verify = "src.citation_checker:main"
 
 [project.urls]
 Repository = "https://github.com/JonasTischer/research-workflow"

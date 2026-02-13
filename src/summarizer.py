@@ -1,11 +1,24 @@
-"""AI-powered paper summarization using Claude."""
+"""AI-powered paper summarization using Claude.
+
+NOTE: This is optional. Claude Code can summarize papers directly
+by reading the markdown files - no API key needed.
+
+This module is for automated batch summarization via the watcher.
+Requires: pip install anthropic
+"""
 
 import os
 from pathlib import Path
-from anthropic import Anthropic
 from rich.console import Console
 
 console = Console()
+
+try:
+    from anthropic import Anthropic
+except ImportError:
+    Anthropic = None
+    console.print("[yellow]anthropic not installed. Auto-summarization disabled.[/yellow]")
+    console.print("[dim]Claude Code can still summarize papers directly.[/dim]")
 
 DEFAULT_PROMPT = """Summarize this academic paper concisely. Include:
 
@@ -36,6 +49,9 @@ def summarize_paper(
     """
     Generate an AI summary of a paper.
     
+    Requires anthropic package. For manual summarization,
+    use Claude Code directly to read and summarize papers.
+    
     Args:
         markdown_path: Path to the markdown file
         output_dir: Directory to save the summary
@@ -47,6 +63,10 @@ def summarize_paper(
     Returns:
         Path to the summary file, or None if failed
     """
+    if Anthropic is None:
+        console.print("[yellow]Skipping auto-summary (anthropic not installed)[/yellow]")
+        return None
+    
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Read markdown content

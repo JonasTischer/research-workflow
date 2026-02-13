@@ -10,18 +10,23 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}Running citation checks...${NC}"
+echo -e "${YELLOW}Checking citations...${NC}"
 
 # Find thesis directory (adjust path as needed)
 THESIS_DIR="${THESIS_DIR:-./chapters}"
 BIB_FILE="${BIB_FILE:-./references.bib}"
-MARKDOWN_DIR="${MARKDOWN_DIR:-./markdown}"
 
 # Check if we have .tex files staged
 STAGED_TEX=$(git diff --cached --name-only --diff-filter=ACM | grep '\.tex$' || true)
 
 if [ -z "$STAGED_TEX" ]; then
     echo -e "${GREEN}No .tex files staged, skipping citation check${NC}"
+    exit 0
+fi
+
+# Check if .bib file exists
+if [ ! -f "$BIB_FILE" ]; then
+    echo -e "${YELLOW}Warning: $BIB_FILE not found, skipping check${NC}"
     exit 0
 fi
 
@@ -45,15 +50,11 @@ if [ -n "$MISSING_KEYS" ]; then
     echo -e "$MISSING_KEYS"
     echo ""
     echo "Add these entries to $BIB_FILE before committing."
+    echo ""
+    echo "For semantic verification (checking claims match papers),"
+    echo "use the verifier subagent: 'Verify this claim against [paper]'"
     exit 1
 fi
 
 echo -e "${GREEN}✓ All citation keys found in .bib${NC}"
-
-# Optional: Run full verification (slower, checks claims against papers)
-if [ "$VERIFY_CLAIMS" = "1" ]; then
-    echo "Running claim verification (this may take a minute)..."
-    python src/citation_checker.py "$THESIS_DIR" "$BIB_FILE" --markdown-dir "$MARKDOWN_DIR"
-fi
-
 exit 0

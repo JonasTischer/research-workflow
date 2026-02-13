@@ -91,6 +91,9 @@ def semantic_scholar_search(query: str, count: int = 10) -> list[dict]:
         
     Returns:
         List of paper results
+    
+    Note: Set S2_API_KEY env var for higher rate limits.
+          Get a key at: https://www.semanticscholar.org/product/api
     """
     url = "https://api.semanticscholar.org/graph/v1/paper/search"
     params = {
@@ -99,8 +102,13 @@ def semantic_scholar_search(query: str, count: int = 10) -> list[dict]:
         "fields": "title,authors,year,abstract,url,citationCount,openAccessPdf",
     }
     
+    headers = {}
+    api_key = os.environ.get("S2_API_KEY")
+    if api_key:
+        headers["x-api-key"] = api_key
+    
     with httpx.Client() as client:
-        response = client.get(url, params=params)
+        response = client.get(url, params=params, headers=headers)
         response.raise_for_status()
         data = response.json()
     

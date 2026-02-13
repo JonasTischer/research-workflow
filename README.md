@@ -36,15 +36,17 @@ cp config.example.yaml config.yaml
 Add to `~/.zshrc` or `~/.bashrc`:
 
 ```bash
-export GOOGLE_API_KEY="..."    # For search + PDF conversion
+export GOOGLE_API_KEY="..."    # Required: PDF conversion + search
 export BRAVE_API_KEY="..."     # Optional: web search
+export S2_API_KEY="..."        # Optional: Semantic Scholar (higher rate limits)
 ```
 
 Get them from:
 - Google: https://aistudio.google.com/apikey
 - Brave: https://brave.com/search/api/
+- Semantic Scholar: https://www.semanticscholar.org/product/api
 
-**Note:** Summaries and citation verification are done by Claude Code directly (no API key needed — uses your Claude Code subscription).
+**Note:** Summaries and citation verification are done by Claude Code directly (uses your Claude Code subscription, no extra API key needed).
 
 ## Usage
 
@@ -103,15 +105,15 @@ Native Claude Code subagents in `.claude/agents/`:
 
 Claude automatically delegates to the right subagent based on your request.
 
-### Batch Verification
+### Batch Check (Pre-commit)
+
+Check all citation keys exist in .bib file:
 
 ```bash
-# Check all citations in LaTeX files
 python src/citation_checker.py ./chapters ./references.bib
-
-# Quick check (keys only)
-python src/citation_checker.py ./chapters ./references.bib --no-verify
 ```
+
+This is also done automatically by the pre-commit hook.
 
 ## Zotero Integration (Recommended)
 
@@ -136,14 +138,16 @@ entire explain --commit HEAD
 entire rewind
 ```
 
-## Git Hooks
+## Git Hook
 
-Block commits with invalid citations:
+Block commits with missing citation keys:
 
 ```bash
 cp hooks/pre-commit .git/hooks/
 chmod +x .git/hooks/pre-commit
 ```
+
+The hook checks that every `\cite{key}` has a matching entry in `.bib`.
 
 ## PDF Conversion Quality
 
@@ -183,18 +187,22 @@ tail -f logs/watcher.log
 
 ```
 research-workflow/
+├── .claude/agents/   # Native Claude Code subagents
+│   ├── verifier.md   # Citation verification
+│   └── researcher.md # Paper search & summary
 ├── papers/           # PDFs (Zotero or manual)
 ├── markdown/         # Converted text (auto-generated)
-├── summaries/        # AI summaries (auto-generated)
+├── summaries/        # AI summaries
 ├── sample-thesis/    # Example LaTeX thesis for testing
 ├── src/
-│   ├── search.py     # Local search/read/verify
+│   ├── search.py     # List/read local papers
 │   ├── web_search.py # Web search (Scholar/arXiv/Brave)
 │   ├── download.py   # Download papers
-│   ├── watcher.py    # PDF processor
+│   ├── watcher.py    # PDF processor daemon
+│   ├── converter.py  # Marker + Gemini PDF conversion
 │   └── ...
-├── hooks/            # Git hooks
-├── scripts/          # Setup scripts
+├── hooks/pre-commit  # Block commits with missing citations
+├── scripts/          # Setup & service scripts
 ├── config.yaml       # Your settings
 └── CLAUDE.md         # Instructions for Claude Code
 ```

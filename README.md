@@ -166,7 +166,47 @@ The watcher:
 
 ## Usage
 
-### CLI Commands
+### Web Search (Finding Papers)
+
+Search across multiple academic sources:
+
+```bash
+# Brave Search (general + academic)
+python src/web_search.py brave "transformer attention mechanisms"
+python src/web_search.py brave "vision transformer" --academic  # Focus on academic sources
+
+# Semantic Scholar (academic papers with citation counts)
+python src/web_search.py scholar "attention is all you need"
+
+# arXiv (preprints)
+python src/web_search.py arxiv "vision transformer"
+
+# Resolve DOI to get metadata
+python src/web_search.py doi "10.48550/arXiv.1706.03762"
+```
+
+### Downloading Papers
+
+Download PDFs directly into your papers folder:
+
+```bash
+# From direct URL
+python src/download.py url "https://arxiv.org/pdf/1706.03762.pdf"
+
+# From arXiv ID (auto-names file)
+python src/download.py arxiv "1706.03762"
+python src/download.py arxiv "2010.11929"
+
+# From DOI (finds open access version via Unpaywall)
+python src/download.py doi "10.48550/arXiv.1706.03762"
+
+# From Semantic Scholar
+python src/download.py scholar "649def34f8be52c8b66281af98ae884c09aef38b"
+```
+
+Downloaded papers are automatically processed by the watcher (if running).
+
+### Local Paper Search
 
 All commands available via `src/search.py`:
 
@@ -325,7 +365,9 @@ research-workflow/
 │   └── uninstall-watcher.sh # Remove service
 │
 └── src/
-    ├── search.py            # Main CLI (find/read/verify)
+    ├── search.py            # Local paper search (find/read/verify)
+    ├── web_search.py        # Web search (Brave/Scholar/arXiv)
+    ├── download.py          # Download papers (arXiv/DOI/URL)
     ├── watcher.py           # PDF watcher + processor
     ├── converter.py         # Marker PDF→MD wrapper
     ├── summarizer.py        # Claude summarization
@@ -341,6 +383,7 @@ Set these in your shell profile (`~/.zshrc` or `~/.bashrc`):
 export ANTHROPIC_API_KEY="sk-ant-..."
 export GOOGLE_API_KEY="..."
 export GOOGLE_CLOUD_PROJECT="your-project-id"
+export BRAVE_API_KEY="..."  # Optional: for web search (https://brave.com/search/api/)
 
 # Optional: Override default paths
 export THESIS_PAPERS_DIR="$HOME/Papers"

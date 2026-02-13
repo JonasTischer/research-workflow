@@ -6,7 +6,36 @@ This is a research paper management system for academic thesis writing.
 
 Run these from the project root (ensure venv is active):
 
-### Search & Read Papers
+### Web Search (Finding New Papers)
+
+```bash
+# Brave Search (needs BRAVE_API_KEY)
+python src/web_search.py brave "query" --academic
+
+# Semantic Scholar (free, no API key)
+python src/web_search.py scholar "attention is all you need"
+
+# arXiv (free, no API key)
+python src/web_search.py arxiv "vision transformer"
+
+# Resolve DOI
+python src/web_search.py doi "10.1234/example"
+```
+
+### Download Papers
+
+```bash
+# From arXiv (recommended - auto-names files)
+python src/download.py arxiv "1706.03762"
+
+# From DOI (finds open access version)
+python src/download.py doi "10.48550/arXiv.1706.03762"
+
+# From URL
+python src/download.py url "https://example.com/paper.pdf"
+```
+
+### Search & Read Local Papers
 
 ```bash
 # Find relevant papers

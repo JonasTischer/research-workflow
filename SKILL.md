@@ -34,10 +34,27 @@ entire rewind                  # Browse sessions
 entire status                  # Check status
 ```
 
-### Paper Search & Read
+### Web Search (Find New Papers)
 
 ```bash
-python src/search.py find "query"              # Semantic search
+python src/web_search.py brave "query" --academic  # Brave (needs API key)
+python src/web_search.py scholar "query"           # Semantic Scholar (free)
+python src/web_search.py arxiv "query"             # arXiv (free)
+python src/web_search.py doi "10.1234/example"     # Resolve DOI
+```
+
+### Download Papers
+
+```bash
+python src/download.py arxiv "1706.03762"          # From arXiv
+python src/download.py doi "10.1234/example"       # From DOI (open access)
+python src/download.py url "https://..." --name x  # From URL
+```
+
+### Local Paper Search & Read
+
+```bash
+python src/search.py find "query"              # Semantic search (Google)
 python src/search.py list                       # List all papers
 python src/search.py read <name>                # Full paper
 python src/search.py read <name> -s "Results"   # Specific section

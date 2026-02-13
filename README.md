@@ -13,41 +13,19 @@ PDF → Zotero → ZotFile saves to papers/
                     ↓
               Upload to Google (search index)
                     ↓
-        Claude Code searches via MCP tool
+        Claude searches → reads markdown → writes
                     ↓
-        Claude reads full markdown locally
+              Git commit (with citation verification)
+                    ↓
+              Entire captures AI session context
 ```
 
 **Search:** Google's File Search API (smart semantic search)  
 **Read:** Local markdown files (full context for Claude)  
-**Cite:** Zotero-managed .bib file (verified citations)
+**Cite:** Zotero-managed .bib file (verified citations)  
+**Audit:** Entire captures AI reasoning with every commit
 
 ## Setup
-
-### 0. Entire (Recommended)
-
-Capture AI reasoning alongside your commits with [Entire](https://entire.io):
-
-```bash
-# Install
-curl -fsSL https://entire.io/install.sh | bash
-
-# Initialize in your thesis repo
-cd ~/thesis
-entire init
-
-# That's it — sessions auto-capture on commit
-```
-
-**Why:** When Claude helps write a paragraph or suggests a citation, Entire captures the full conversation. Months later you can trace back *why* something was written that way.
-
-```bash
-# See what AI session produced a commit
-entire explain --commit HEAD
-
-# Browse all checkpoints
-entire rewind
-```
 
 ### 1. Prerequisites
 
@@ -57,6 +35,9 @@ brew install python@3.11
 
 # Marker for PDF conversion
 pip install marker-pdf
+
+# Entire for AI session capture
+curl -fsSL https://entire.io/install.sh | bash
 
 # Dependencies
 cd thesis-workflow
@@ -104,7 +85,16 @@ python src/watcher.py
 python src/watcher.py --once
 ```
 
-### 6. Start the Watcher
+### 6. Initialize Entire
+
+```bash
+# In your thesis repo
+entire init
+```
+
+This hooks into git to capture Claude Code sessions on every commit.
+
+### 7. Start the Watcher
 
 ```bash
 # Process existing papers and watch for new ones
@@ -176,6 +166,54 @@ Claude: Let me search the papers...
         Let me verify this citation...
         [runs: python src/search.py verify dosovitskiy2020 "pure transformer..."]
         ✅ Verified
+```
+
+## AI Session Capture (Entire)
+
+Every commit captures the AI conversation that produced it. Essential for academic work where you need to trace reasoning.
+
+### Why This Matters
+
+When your supervisor asks "why did you phrase it this way?" or "how did you find this citation?", you can show exactly what Claude suggested and why.
+
+### Commands
+
+```bash
+# See what AI session produced a commit
+entire explain --commit HEAD
+
+# Explain a specific commit
+entire explain --commit abc1234
+
+# Browse all captured sessions
+entire rewind
+
+# Check capture status
+entire status
+```
+
+### What Gets Captured
+
+- Full conversation with Claude Code
+- Tool calls (paper searches, reads, verifications)
+- Claude's reasoning for suggestions
+- Linked to the exact commit via checkpoint ID
+
+### Example
+
+```bash
+$ entire explain --commit HEAD
+
+Commit: 683bbbf "Add results section with transformer comparison"
+Session: https://entire.io/s/abc123xyz
+
+Claude searched for: "transformer attention visualization"
+Found papers: vaswani2017, dosovitskiy2020
+Read: markdown/vaswani2017.md (section: Results)
+Verified: "28.4 BLEU" claim → ✅ 
+
+Reasoning: "Based on the original transformer paper, I added
+a comparison table showing BLEU scores across model sizes..."
 ```
 
 ## Citation Verification

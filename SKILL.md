@@ -9,9 +9,25 @@ cd /path/to/thesis-workflow
 pip install -r requirements.txt
 cp config.example.yaml config.yaml
 # Edit config.yaml with your paths
+
+# Initialize Entire for session capture
+entire init
 ```
 
 ## Commands
+
+### AI Session Tracing (Entire)
+
+```bash
+# See AI reasoning behind a commit
+entire explain --commit HEAD
+
+# Browse captured sessions
+entire rewind
+
+# Check status
+entire status
+```
 
 ### Paper Management
 

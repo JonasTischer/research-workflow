@@ -1,370 +1,167 @@
 # Research Workflow
 
-AI-powered research paper management for academic writing with Claude Code.
+AI-powered research paper management for thesis writing with Claude Code.
 
-## Overview
-
-A complete workflow for managing research papers during thesis/dissertation writing:
-
-- **Automatic processing**: PDFs → Markdown → AI summaries
-- **Smart search**: Semantic search via Google's File Search API  
-- **Citation verification**: Verify claims against actual paper content
-- **Session capture**: Track AI reasoning with Entire
-- **Git hooks**: Block commits with invalid citations
-
-## Architecture
+## What It Does
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Zotero    │────▶│   Watcher   │────▶│  Markdown   │
-│  (ZotFile)  │     │  (Marker)   │     │  + Summary  │
-└─────────────┘     └─────────────┘     └─────────────┘
-                           │
-                           ▼
-                    ┌─────────────┐
-                    │   Google    │
-                    │ File Search │
-                    └─────────────┘
-                           │
-                           ▼
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Claude    │────▶│    Write    │────▶│   Commit    │
-│    Code     │     │  + Verify   │     │  (Entire)   │
-└─────────────┘     └─────────────┘     └─────────────┘
+Find papers → Download → Auto-convert to markdown → Search & cite → Verify claims
 ```
 
-## Requirements
+- **Search**: Semantic Scholar, arXiv, Brave, Google
+- **Convert**: Marker + Gemini Flash (tables, math, complex layouts)
+- **Cite**: Verification against actual paper content
+- **Audit**: Entire captures AI reasoning with each commit
 
-- macOS (for launchd service) or Linux
-- Python 3.11+
-- [uv](https://github.com/astral-sh/uv) (modern Python package manager)
-- [Claude Code](https://claude.ai/code) subscription
-- Google Cloud account (for File Search API)
-- [Zotero](https://www.zotero.org/) with ZotFile and Better BibTeX
-
-## Installation
-
-### 1. Install System Dependencies
+## Quick Start
 
 ```bash
-# macOS
-brew install python@3.11
-
-# Install uv (fast Python package manager)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install Marker for PDF conversion
-uv tool install marker-pdf
-
-# Install Entire for session capture
-curl -fsSL https://entire.io/install.sh | bash
-```
-
-### 2. Clone and Setup
-
-```bash
+# Clone
 git clone https://github.com/JonasTischer/research-workflow.git
 cd research-workflow
 
-# Create virtual environment and install dependencies
-uv venv
-source .venv/bin/activate  # or: source .venv/bin/activate.fish
-uv pip install -r requirements.txt
+# Setup (installs uv, creates venv, installs deps)
+./scripts/setup.sh
 
-# Copy and configure
+# Configure
 cp config.example.yaml config.yaml
-```
+# Add your API keys (see below)
 
-### 3. Configure `config.yaml`
-
-```yaml
-paths:
-  papers: ~/Papers          # Where Zotero/ZotFile saves PDFs
-  markdown: ./markdown      # Converted markdown output
-  summaries: ./summaries    # AI-generated summaries
-
-# Add your API keys (or set as environment variables)
-# ANTHROPIC_API_KEY: sk-ant-...
-# GOOGLE_API_KEY: ...
-```
-
-### 4. Setup Zotero
-
-1. **Install Zotero**: https://www.zotero.org/download/
-
-2. **Install ZotFile** (auto-saves PDFs to folder):
-   - Download from http://zotfile.com/
-   - Zotero → Tools → Add-ons → Install from file
-   - Configure: Tools → ZotFile Preferences → Location of Files → `~/Papers`
-
-3. **Install Better BibTeX** (auto-exports .bib):
-   - Download from https://retorque.re/zotero-better-bibtex/
-   - Install same way as ZotFile
-   - Right-click library → Export Library → Better BibLaTeX
-   - Check "Keep updated" → Save as `references.bib` in thesis folder
-
-### 5. Setup Google File Search
-
-```bash
-# Install gcloud CLI
-brew install google-cloud-sdk
-
-# Authenticate
-gcloud auth application-default login
-
-# Enable APIs
-gcloud services enable aiplatform.googleapis.com
-
-# Set your project
-export GOOGLE_CLOUD_PROJECT=your-project-id
-```
-
-### 6. Initialize Entire
-
-In your thesis repository:
-
-```bash
-cd ~/thesis
-entire init
-```
-
-This captures Claude Code sessions with every commit.
-
-### 7. Install Git Hooks
-
-```bash
-# In your thesis repo
-cp /path/to/research-workflow/hooks/pre-commit .git/hooks/
-chmod +x .git/hooks/pre-commit
-```
-
-The pre-commit hook blocks commits if citations are missing from `.bib`.
-
-### 8. Start the Watcher Service
-
-```bash
-# Process existing papers first
-source .venv/bin/activate
-python src/watcher.py --once
-
-# Install as background service (macOS)
+# Start watcher (processes PDFs automatically)
 ./scripts/install-watcher.sh
-
-# Verify it's running
-launchctl list | grep research-workflow
-
-# View logs
-tail -f logs/watcher.log
 ```
 
-The watcher:
-- Runs automatically on login
-- Watches `~/Papers` for new PDFs
-- Converts to markdown via Marker + **Gemini Flash** (for higher accuracy)
-- Generates AI summaries via Claude
-- Uploads to Google for search indexing
+## API Keys
 
-### PDF Conversion Quality
+Add to `~/.zshrc` or `~/.bashrc`:
 
-Marker uses **Gemini 2.0 Flash** by default for enhanced conversion accuracy:
-
-- ✅ Tables spanning multiple pages (merged correctly)
-- ✅ Complex table structures
-- ✅ Inline math (properly formatted as LaTeX)
-- ✅ Form value extraction
-- ✅ Better handling of academic paper layouts
-
-This is enabled by default when `GOOGLE_API_KEY` is set. To disable:
-
-```yaml
-# config.yaml
-converter:
-  use_llm: false
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."   # For summaries
+export GOOGLE_API_KEY="..."              # For search + PDF conversion
+export BRAVE_API_KEY="..."               # Optional: web search
 ```
 
-For scanned PDFs or documents with lots of math:
-
-```yaml
-converter:
-  force_ocr: true        # Force OCR on all pages
-  redo_inline_math: true # Highest quality math (slower)
-```
+Get them from:
+- Anthropic: https://console.anthropic.com/
+- Google: https://aistudio.google.com/apikey
+- Brave: https://brave.com/search/api/
 
 ## Usage
 
-### Web Search (Finding Papers)
-
-Search across multiple academic sources:
+### Find Papers
 
 ```bash
-# Brave Search (general + academic)
-python src/web_search.py brave "transformer attention mechanisms"
-python src/web_search.py brave "vision transformer" --academic  # Focus on academic sources
-
-# Semantic Scholar (academic papers with citation counts)
-python src/web_search.py scholar "attention is all you need"
-
-# arXiv (preprints)
+# Academic search (free, no API key)
+python src/web_search.py scholar "attention mechanisms"
 python src/web_search.py arxiv "vision transformer"
 
-# Resolve DOI to get metadata
-python src/web_search.py doi "10.48550/arXiv.1706.03762"
+# Web search (needs Brave API key)
+python src/web_search.py brave "topic" --academic
 ```
 
-### Downloading Papers
-
-Download PDFs directly into your papers folder:
+### Download Papers
 
 ```bash
-# From direct URL
-python src/download.py url "https://arxiv.org/pdf/1706.03762.pdf"
-
-# From arXiv ID (auto-names file)
-python src/download.py arxiv "1706.03762"
-python src/download.py arxiv "2010.11929"
-
-# From DOI (finds open access version via Unpaywall)
-python src/download.py doi "10.48550/arXiv.1706.03762"
-
-# From Semantic Scholar
-python src/download.py scholar "649def34f8be52c8b66281af98ae884c09aef38b"
+python src/download.py arxiv "1706.03762"           # From arXiv
+python src/download.py doi "10.1000/example"        # From DOI (open access)
+python src/download.py url "https://..." --name x   # Direct URL
 ```
 
-Downloaded papers are automatically processed by the watcher (if running).
+Downloaded papers are automatically processed by the watcher.
 
-### Local Paper Search
-
-All commands available via `src/search.py`:
+### Read Papers
 
 ```bash
-# Activate environment
-cd research-workflow
-source .venv/bin/activate
+python src/search.py list                           # All papers
+python src/search.py read vaswani2017               # Full paper
+python src/search.py read vaswani2017 -s "Results"  # Specific section
+python src/search.py summary vaswani2017            # AI summary
+python src/search.py find "attention mechanisms"    # Semantic search
+```
 
-# Search for papers
-python src/search.py find "attention mechanisms in transformers"
+### Verify Citations
 
-# List all papers in library
-python src/search.py list
+**Always verify before citing:**
 
-# Read full paper
-python src/search.py read vaswani2017
-
-# Read specific section
-python src/search.py read vaswani2017 --section "Results"
-
-# Read AI summary
-python src/search.py summary vaswani2017
-
-# Verify a citation claim
+```bash
 python src/search.py verify vaswani2017 "achieved 28.4 BLEU on WMT 2014"
-
-# Upload papers to Google (for search)
-python src/search.py upload
-```
-
-### Citation Verification
-
-```bash
-# Verify single claim
-python src/search.py verify vaswani2017 "Transformers achieved 28.4 BLEU"
 # ✅ VERIFIED (95% confidence)
 # Quote: "The big transformer model achieves 28.4 BLEU..."
+```
 
+### Batch Verification
+
+```bash
 # Check all citations in LaTeX files
 python src/citation_checker.py ./chapters ./references.bib
 
-# Quick check (keys only, skip claim verification)
+# Quick check (keys only)
 python src/citation_checker.py ./chapters ./references.bib --no-verify
-
-# JSON output (for CI)
-python src/citation_checker.py ./chapters ./references.bib --json
 ```
 
-### Writing with Claude Code
+## Zotero Integration (Recommended)
+
+For automatic bibliography management:
+
+1. Install [Zotero](https://www.zotero.org/download/)
+2. Install [ZotFile](http://zotfile.com/) → auto-saves PDFs to `papers/`
+3. Install [Better BibTeX](https://retorque.re/zotero-better-bibtex/) → auto-exports `.bib`
+
+Then: Find paper → Click Zotero extension → PDF saved → Watcher converts → Ready to cite
+
+## Entire (AI Session Capture)
+
+Track the reasoning behind your AI-assisted writing:
 
 ```bash
-cd ~/thesis
-claude
-```
+# In your thesis repo
+entire init
 
-Example session:
-
-```
-You: Find papers about vision transformers
-
-Claude: [runs: python search.py find "vision transformers"]
-        Found 3 relevant papers:
-        1. dosovitskiy2020 (0.94) - Vision Transformer architecture
-        2. liu2021-swin (0.89) - Hierarchical vision transformer
-        ...
-
-You: Read the dosovitskiy paper and help me write about their approach
-
-Claude: [runs: python search.py read dosovitskiy2020]
-        [reads full markdown]
-        
-        Here's a paragraph for your related work:
-        
-        "Dosovitskiy et al. demonstrated that pure transformer 
-        architectures can match CNN performance on image classification
-        when trained on sufficient data \cite{dosovitskiy2020vit}..."
-
-You: Verify that citation before I commit
-
-Claude: [runs: python search.py verify dosovitskiy2020 "match CNN performance"]
-        ✅ VERIFIED (92% confidence)
-```
-
-### AI Session Capture (Entire)
-
-Every commit captures the AI conversation that produced it:
-
-```bash
-# See AI reasoning behind a commit
+# After commits, see the AI session
 entire explain --commit HEAD
-
-# Browse all captured sessions  
 entire rewind
-
-# Check status
-entire status
 ```
 
-Example output:
+## Git Hooks
+
+Block commits with invalid citations:
 
 ```bash
-$ entire explain --commit HEAD
-
-Commit: 683bbbf "Add results section with transformer comparison"
-Session: https://entire.io/s/abc123xyz
-
-Claude searched for: "transformer attention visualization"
-Found papers: vaswani2017, dosovitskiy2020
-Read: markdown/vaswani2017.md (section: Results)
-Verified: "28.4 BLEU" claim → ✅ 
-
-Reasoning: "Based on the original transformer paper, I added
-a comparison table showing BLEU scores across model sizes..."
+cp hooks/pre-commit .git/hooks/
+chmod +x .git/hooks/pre-commit
 ```
 
-### Watcher Service Management
+## PDF Conversion Quality
+
+Uses **Marker + Gemini 2.0 Flash** for high accuracy:
+- ✅ Multi-page tables merged correctly
+- ✅ Inline math → LaTeX
+- ✅ Complex academic layouts
+
+Configure in `config.yaml`:
+
+```yaml
+converter:
+  use_llm: true           # Gemini Flash (default)
+  force_ocr: false        # For scanned PDFs
+  redo_inline_math: false # Highest quality math
+```
+
+## Watcher Service
+
+The watcher runs in background, processing new PDFs automatically:
 
 ```bash
+# Install as service (runs on login)
+./scripts/install-watcher.sh
+
 # Check status
 launchctl list | grep research-workflow
 
-# View logs
+# Logs
 tail -f logs/watcher.log
-tail -f logs/watcher.error.log
 
-# Stop service
-launchctl unload ~/Library/LaunchAgents/com.research-workflow.watcher.plist
-
-# Start service
-launchctl load ~/Library/LaunchAgents/com.research-workflow.watcher.plist
-
-# Uninstall completely
+# Uninstall
 ./scripts/uninstall-watcher.sh
 ```
 
@@ -372,97 +169,43 @@ launchctl load ~/Library/LaunchAgents/com.research-workflow.watcher.plist
 
 ```
 research-workflow/
-├── config.yaml              # Your configuration (git-ignored)
-├── config.example.yaml      # Configuration template
-├── requirements.txt         # Python dependencies
-├── SKILL.md                 # Quick reference for Claude
-│
-├── papers/                  # Raw PDFs (Zotero/ZotFile managed)
-├── markdown/                # Converted markdown (full papers)
-├── summaries/               # AI-generated summaries
-├── logs/                    # Watcher service logs
-│
-├── hooks/
-│   ├── pre-commit           # Blocks invalid citations
-│   └── post-commit          # Async claim verification
-│
-├── scripts/
-│   ├── install-watcher.sh   # Install macOS launchd service
-│   └── uninstall-watcher.sh # Remove service
-│
-└── src/
-    ├── search.py            # Local paper search (find/read/verify)
-    ├── web_search.py        # Web search (Brave/Scholar/arXiv)
-    ├── download.py          # Download papers (arXiv/DOI/URL)
-    ├── watcher.py           # PDF watcher + processor
-    ├── converter.py         # Marker PDF→MD wrapper
-    ├── summarizer.py        # Claude summarization
-    ├── citation_checker.py  # Citation verification
-    └── google_search.py     # Google File Search client
-```
-
-## Environment Variables
-
-Set these in your shell profile (`~/.zshrc` or `~/.bashrc`):
-
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-export GOOGLE_API_KEY="..."
-export GOOGLE_CLOUD_PROJECT="your-project-id"
-export BRAVE_API_KEY="..."  # Optional: for web search (https://brave.com/search/api/)
-
-# Optional: Override default paths
-export THESIS_PAPERS_DIR="$HOME/Papers"
-export THESIS_MARKDOWN_DIR="$HOME/thesis/research-workflow/markdown"
-export THESIS_SUMMARIES_DIR="$HOME/thesis/research-workflow/summaries"
+├── papers/           # PDFs (Zotero or manual)
+├── markdown/         # Converted text (auto-generated)
+├── summaries/        # AI summaries (auto-generated)
+├── src/
+│   ├── search.py     # Local search/read/verify
+│   ├── web_search.py # Web search (Scholar/arXiv/Brave)
+│   ├── download.py   # Download papers
+│   ├── watcher.py    # PDF processor
+│   └── ...
+├── hooks/            # Git hooks
+├── scripts/          # Setup scripts
+├── config.yaml       # Your settings
+└── CLAUDE.md         # Instructions for Claude Code
 ```
 
 ## Troubleshooting
 
-### Watcher not processing files
-
+**Watcher not running:**
 ```bash
-# Check if running
 launchctl list | grep research-workflow
-
-# Check logs for errors
 cat logs/watcher.error.log
+```
 
-# Test manually
+**Paper not converting:**
+```bash
+# Check Marker is installed
+marker_single --help
+
+# Try manually
 python src/watcher.py --once
 ```
 
-### Marker conversion fails
-
+**Search not working:**
 ```bash
-# Ensure Marker is installed
-uv tool install marker-pdf
-
-# Test on single file
-marker_single path/to/paper.pdf --output_dir ./test/
-```
-
-### Google search not working
-
-```bash
-# Check authentication
-gcloud auth application-default print-access-token
-
-# Verify API is enabled
-gcloud services list --enabled | grep aiplatform
-```
-
-### Citation verification fails
-
-```bash
-# Check paper exists
+# Check API key
+echo $GOOGLE_API_KEY
 python src/search.py list
-
-# Check markdown was generated
-ls -la markdown/
-
-# Run with debug output
-python src/citation_checker.py ./chapters ./refs.bib 2>&1 | head -50
 ```
 
 ## License

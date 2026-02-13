@@ -1,120 +1,86 @@
-# Research Workflow - Claude Code Instructions
+# Research Workflow
 
-This is a research paper management system for academic thesis writing.
+You're helping write an academic thesis. This workspace has tools for finding, reading, and citing papers correctly.
 
-## Available Commands
-
-Run these from the project root (ensure venv is active):
-
-### Web Search (Finding New Papers)
+## Quick Reference
 
 ```bash
-# Brave Search (needs BRAVE_API_KEY)
-python src/web_search.py brave "query" --academic
+# Always run from project root with venv active
+cd /path/to/research-workflow && source .venv/bin/activate
+```
 
-# Semantic Scholar (free, no API key)
-python src/web_search.py scholar "attention is all you need"
+### Find Papers (Web)
 
-# arXiv (free, no API key)
-python src/web_search.py arxiv "vision transformer"
-
-# Resolve DOI
-python src/web_search.py doi "10.1234/example"
+```bash
+python src/web_search.py scholar "attention mechanisms"     # Academic papers
+python src/web_search.py arxiv "vision transformer"         # Preprints  
+python src/web_search.py brave "topic" --academic           # Web search
 ```
 
 ### Download Papers
 
 ```bash
-# From arXiv (recommended - auto-names files)
-python src/download.py arxiv "1706.03762"
-
-# From DOI (finds open access version)
-python src/download.py doi "10.48550/arXiv.1706.03762"
-
-# From URL
-python src/download.py url "https://example.com/paper.pdf"
+python src/download.py arxiv "1706.03762"                   # From arXiv
+python src/download.py doi "10.1000/example"                # From DOI
 ```
 
-### Search & Read Local Papers
+Downloads go to `papers/` → watcher auto-converts to markdown.
+
+### Read Papers (Local)
 
 ```bash
-# Find relevant papers
-python src/search.py find "your search query"
-
-# List all papers
-python src/search.py list
-
-# Read full paper
-python src/search.py read <paper_name>
-
-# Read specific section
-python src/search.py read <paper_name> --section "Results"
-
-# Read AI summary
-python src/search.py summary <paper_name>
+python src/search.py list                                   # All papers
+python src/search.py read <name>                            # Full paper
+python src/search.py read <name> --section "Methods"        # One section
+python src/search.py summary <name>                         # AI summary
+python src/search.py find "query"                           # Semantic search
 ```
 
-### Citation Verification
+### Verify Citations (REQUIRED)
+
+**Before citing anything, verify the claim:**
 
 ```bash
-# Verify a claim against a paper (ALWAYS do this before citing)
-python src/search.py verify <paper_name> "claim to verify"
-
-# Check all citations in LaTeX
-python src/citation_checker.py <tex_dir> <bib_file>
+python src/search.py verify <paper> "exact claim you're making"
 ```
 
-### Paper Management
-
+Example:
 ```bash
-# Process new papers (usually runs as service)
-python src/watcher.py --once
-
-# Upload to Google search index
-python src/search.py upload
+python src/search.py verify vaswani2017 "achieved 28.4 BLEU on WMT 2014"
+# ✅ VERIFIED (95% confidence)
+# Quote: "The big transformer model achieves 28.4 BLEU..."
 ```
 
-## Workflow Guidelines
+If verification fails → revise the claim or find a different source.
 
-1. **Finding papers**: Use `search.py find` to discover relevant papers
-2. **Reading**: Use `search.py read` to get full content, `summary` for overview
-3. **Writing**: Help write paragraphs using paper content
-4. **ALWAYS verify**: Before any `\cite{}`, run `search.py verify` to confirm the claim
-5. **Commit**: After verification passes, commit with descriptive message
+## Workflow
 
-## Citation Rules
+1. **Search** → `web_search.py scholar "topic"` to find relevant papers
+2. **Download** → `download.py arxiv "id"` to get the PDF
+3. **Read** → `search.py read <name>` to understand the paper  
+4. **Write** → Draft paragraph with citation
+5. **Verify** → `search.py verify <paper> "claim"` before committing
+6. **Commit** → Git commit (Entire captures your reasoning)
 
-- NEVER invent citation details
-- ALWAYS verify claims against actual paper content before citing
-- Use citation keys from the `.bib` file (managed by Zotero/Better BibTeX)
-- If unsure about a claim, say so and suggest verification
+## Rules
 
-## Directory Structure
+- **Never invent citations** — only cite papers in the library
+- **Always verify claims** — run `search.py verify` before any `\cite{}`
+- **Use .bib keys** — citation keys come from `references.bib` (Zotero manages this)
+- **Check your work** — if unsure about a claim, say so
 
-- `papers/` - Raw PDFs
-- `markdown/` - Converted markdown (full text, enhanced with Gemini Flash)
-- `summaries/` - AI-generated summaries
-- `references.bib` - Citation database (auto-managed by Zotero)
+## Folders
 
-## PDF Conversion
+```
+papers/      → PDFs (add here or via download.py)
+markdown/    → Full text (auto-converted by Marker + Gemini)
+summaries/   → AI summaries
+```
 
-Papers are converted using Marker + Gemini 2.0 Flash for high accuracy:
-- Tables (including multi-page) are properly formatted
-- Inline math is converted to LaTeX
-- Academic paper layouts handled well
+## Re-processing
 
-If markdown looks wrong, the paper can be re-converted with:
+If a paper's markdown looks wrong:
 ```bash
-rm markdown/paper_name.md
+rm markdown/<paper>.md
 python src/watcher.py --once
 ```
-
-## Example Session
-
-User: "Help me write about attention mechanisms"
-
-1. Search: `python src/search.py find "attention mechanisms transformers"`
-2. Read top result: `python src/search.py read vaswani2017`
-3. Write paragraph using the content
-4. Verify: `python src/search.py verify vaswani2017 "the claim you wrote"`
-5. If verified, include `\cite{vaswani2017}` in the text

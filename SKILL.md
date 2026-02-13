@@ -1,101 +1,60 @@
-# Research Workflow Skill
+# Research Workflow
 
-AI-powered research paper management for academic writing.
+Paper management for thesis writing.
 
-## Quick Setup
+## Setup
 
 ```bash
-# Clone
 git clone https://github.com/JonasTischer/research-workflow.git
 cd research-workflow
+./scripts/setup.sh
 
-# Install with uv
-uv venv && source .venv/bin/activate
-uv pip install -r requirements.txt
+# Add to ~/.zshrc:
+export ANTHROPIC_API_KEY="sk-ant-..."
+export GOOGLE_API_KEY="..."
 
-# Configure
-cp config.example.yaml config.yaml
-# Edit config.yaml
-
-# Initialize Entire
-entire init
-
-# Start watcher service
+# Start watcher
 ./scripts/install-watcher.sh
 ```
 
 ## Commands
 
-### AI Session Tracing (Entire)
+### Find & Download
 
 ```bash
-entire explain --commit HEAD   # See AI reasoning
-entire rewind                  # Browse sessions
-entire status                  # Check status
+python src/web_search.py scholar "query"      # Academic search
+python src/web_search.py arxiv "query"        # Preprints
+python src/download.py arxiv "1706.03762"     # Download
+python src/download.py doi "10.1000/xyz"      # From DOI
 ```
 
-### Web Search (Find New Papers)
+### Read
 
 ```bash
-python src/web_search.py brave "query" --academic  # Brave (needs API key)
-python src/web_search.py scholar "query"           # Semantic Scholar (free)
-python src/web_search.py arxiv "query"             # arXiv (free)
-python src/web_search.py doi "10.1234/example"     # Resolve DOI
+python src/search.py list                     # All papers
+python src/search.py read <name>              # Full text
+python src/search.py summary <name>           # AI summary
+python src/search.py find "query"             # Search
 ```
 
-### Download Papers
+### Verify
 
 ```bash
-python src/download.py arxiv "1706.03762"          # From arXiv
-python src/download.py doi "10.1234/example"       # From DOI (open access)
-python src/download.py url "https://..." --name x  # From URL
+python src/search.py verify <paper> "claim"   # Check citation
 ```
 
-### Local Paper Search & Read
+### Entire (Session Capture)
 
 ```bash
-python src/search.py find "query"              # Semantic search (Google)
-python src/search.py list                       # List all papers
-python src/search.py read <name>                # Full paper
-python src/search.py read <name> -s "Results"   # Specific section
-python src/search.py summary <name>             # AI summary
-```
-
-### Citation Verification
-
-```bash
-# Verify single claim
-python src/search.py verify <paper> "claim"
-
-# Check all LaTeX citations
-python src/citation_checker.py ./chapters ./refs.bib
-
-# Quick check (keys only)
-python src/citation_checker.py ./chapters ./refs.bib --no-verify
-```
-
-### Watcher Service
-
-```bash
-python src/watcher.py --once           # Process existing
-./scripts/install-watcher.sh           # Install service
-launchctl list | grep research         # Check status
-tail -f logs/watcher.log               # View logs
-./scripts/uninstall-watcher.sh         # Remove service
-```
-
-## Environment Variables
-
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-export GOOGLE_API_KEY="..."
-export GOOGLE_CLOUD_PROJECT="your-project"
+entire explain --commit HEAD                  # See AI reasoning
+entire rewind                                 # Browse sessions
 ```
 
 ## Workflow
 
-1. Add paper to Zotero → PDF auto-saves → Watcher converts to markdown
-2. `search.py find` → discover relevant papers
-3. `search.py read` → get full content
-4. Write with Claude → verify citations → commit
-5. Entire captures the AI reasoning
+1. Search → `web_search.py scholar "topic"`
+2. Download → `download.py arxiv "id"`
+3. Read → `search.py read <name>`
+4. Write → Draft with citations
+5. Verify → `search.py verify <paper> "claim"`
+6. Commit → Entire captures reasoning

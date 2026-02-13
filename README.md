@@ -1,59 +1,109 @@
-# Thesis Workflow
+# Research Workflow
 
-AI-powered research paper management for PhD thesis writing with Claude Code.
+AI-powered research paper management for academic writing with Claude Code.
+
+## Overview
+
+A complete workflow for managing research papers during thesis/dissertation writing:
+
+- **Automatic processing**: PDFs → Markdown → AI summaries
+- **Smart search**: Semantic search via Google's File Search API  
+- **Citation verification**: Verify claims against actual paper content
+- **Session capture**: Track AI reasoning with Entire
+- **Git hooks**: Block commits with invalid citations
 
 ## Architecture
 
 ```
-PDF → Zotero → ZotFile saves to papers/
-                    ↓
-              Marker converts → markdown/
-                    ↓
-              Claude summarizes → summaries/
-                    ↓
-              Upload to Google (search index)
-                    ↓
-        Claude searches → reads markdown → writes
-                    ↓
-              Git commit (with citation verification)
-                    ↓
-              Entire captures AI session context
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Zotero    │────▶│   Watcher   │────▶│  Markdown   │
+│  (ZotFile)  │     │  (Marker)   │     │  + Summary  │
+└─────────────┘     └─────────────┘     └─────────────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │   Google    │
+                    │ File Search │
+                    └─────────────┘
+                           │
+                           ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Claude    │────▶│    Write    │────▶│   Commit    │
+│    Code     │     │  + Verify   │     │  (Entire)   │
+└─────────────┘     └─────────────┘     └─────────────┘
 ```
 
-**Search:** Google's File Search API (smart semantic search)  
-**Read:** Local markdown files (full context for Claude)  
-**Cite:** Zotero-managed .bib file (verified citations)  
-**Audit:** Entire captures AI reasoning with every commit
+## Requirements
 
-## Setup
+- macOS (for launchd service) or Linux
+- Python 3.11+
+- [uv](https://github.com/astral-sh/uv) (modern Python package manager)
+- [Claude Code](https://claude.ai/code) subscription
+- Google Cloud account (for File Search API)
+- [Zotero](https://www.zotero.org/) with ZotFile and Better BibTeX
 
-### 1. Prerequisites
+## Installation
+
+### 1. Install System Dependencies
 
 ```bash
-# Python 3.11+
+# macOS
 brew install python@3.11
 
-# Marker for PDF conversion
-pip install marker-pdf
+# Install uv (fast Python package manager)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Entire for AI session capture
+# Install Marker for PDF conversion
+uv tool install marker-pdf
+
+# Install Entire for session capture
 curl -fsSL https://entire.io/install.sh | bash
-
-# Dependencies
-cd thesis-workflow
-pip install -r requirements.txt
 ```
 
-### 2. Zotero Setup
+### 2. Clone and Setup
 
-1. Install [Zotero](https://www.zotero.org/download/)
-2. Install [ZotFile](http://zotfile.com/) addon
-   - Preferences → Set "Location of Files" to `~/thesis-workflow/papers/`
-3. Install [Better BibTeX](https://retorque.re/zotero-better-bibtex/)
-   - Right-click library → Export → Better BibLaTeX → Keep updated
-   - Save as `references.bib` in your thesis folder
+```bash
+git clone https://github.com/JonasTischer/research-workflow.git
+cd research-workflow
 
-### 3. Google Cloud Setup (for search)
+# Create virtual environment and install dependencies
+uv venv
+source .venv/bin/activate  # or: source .venv/bin/activate.fish
+uv pip install -r requirements.txt
+
+# Copy and configure
+cp config.example.yaml config.yaml
+```
+
+### 3. Configure `config.yaml`
+
+```yaml
+paths:
+  papers: ~/Papers          # Where Zotero/ZotFile saves PDFs
+  markdown: ./markdown      # Converted markdown output
+  summaries: ./summaries    # AI-generated summaries
+
+# Add your API keys (or set as environment variables)
+# ANTHROPIC_API_KEY: sk-ant-...
+# GOOGLE_API_KEY: ...
+```
+
+### 4. Setup Zotero
+
+1. **Install Zotero**: https://www.zotero.org/download/
+
+2. **Install ZotFile** (auto-saves PDFs to folder):
+   - Download from http://zotfile.com/
+   - Zotero → Tools → Add-ons → Install from file
+   - Configure: Tools → ZotFile Preferences → Location of Files → `~/Papers`
+
+3. **Install Better BibTeX** (auto-exports .bib):
+   - Download from https://retorque.re/zotero-better-bibtex/
+   - Install same way as ZotFile
+   - Right-click library → Export Library → Better BibLaTeX
+   - Check "Keep updated" → Save as `references.bib` in thesis folder
+
+### 5. Setup Google File Search
 
 ```bash
 # Install gcloud CLI
@@ -64,150 +114,158 @@ gcloud auth application-default login
 
 # Enable APIs
 gcloud services enable aiplatform.googleapis.com
-```
 
-Create a corpus for your papers in Vertex AI Search, or use the Gemini File API directly.
-
-### 4. Configure
-
-```bash
-cp config.example.yaml config.yaml
-# Edit config.yaml with your paths and API settings
-```
-
-### 5. Run the Watcher
-
-```bash
-# Start watching for new PDFs
-python src/watcher.py
-
-# Or run once on existing files
-python src/watcher.py --once
+# Set your project
+export GOOGLE_CLOUD_PROJECT=your-project-id
 ```
 
 ### 6. Initialize Entire
 
+In your thesis repository:
+
 ```bash
-# In your thesis repo
+cd ~/thesis
 entire init
 ```
 
-This hooks into git to capture Claude Code sessions on every commit.
+This captures Claude Code sessions with every commit.
 
-### 7. Start the Watcher
+### 7. Install Git Hooks
 
 ```bash
-# One-time: process existing papers
+# In your thesis repo
+cp /path/to/research-workflow/hooks/pre-commit .git/hooks/
+chmod +x .git/hooks/pre-commit
+```
+
+The pre-commit hook blocks commits if citations are missing from `.bib`.
+
+### 8. Start the Watcher Service
+
+```bash
+# Process existing papers first
+source .venv/bin/activate
 python src/watcher.py --once
 
-# Run as background service (auto-starts on login)
+# Install as background service (macOS)
 ./scripts/install-watcher.sh
 
-# Check it's running
+# Verify it's running
 launchctl list | grep research-workflow
 
 # View logs
 tail -f logs/watcher.log
 ```
 
-The watcher runs automatically on Mac login. When you add a paper to Zotero, it auto-converts to markdown and generates a summary.
+The watcher:
+- Runs automatically on login
+- Watches `~/Papers` for new PDFs
+- Converts to markdown via Marker
+- Generates AI summaries via Claude
+- Uploads to Google for search indexing
 
 ## Usage
 
-### Adding Papers
-
-1. Find paper (Google Scholar, Semantic Scholar, Elicit)
-2. Click Zotero browser extension → saves to library
-3. ZotFile auto-moves PDF to `papers/`
-4. Watcher detects new PDF:
-   - Converts to markdown → `markdown/paper-name.md`
-   - Generates summary → `summaries/paper-name.summary.md`
-   - Uploads to Google corpus for search indexing
-
 ### CLI Commands
 
-```bash
-# Search for papers
-python src/search.py find "attention mechanisms in vision transformers"
-# Found 3 relevant papers:
-# 1. dosovitskiy2020 (0.92) - Vision transformer architecture
-# 2. vaswani2017 (0.87) - Original transformer paper
-# 3. liu2021-swin (0.84) - Hierarchical vision transformer
+All commands available via `src/search.py`:
 
-# List all papers
+```bash
+# Activate environment
+cd research-workflow
+source .venv/bin/activate
+
+# Search for papers
+python src/search.py find "attention mechanisms in transformers"
+
+# List all papers in library
 python src/search.py list
 
-# Read a paper
-python src/search.py read dosovitskiy2020
+# Read full paper
+python src/search.py read vaswani2017
 
 # Read specific section
-python src/search.py read dosovitskiy2020 --section "Results"
+python src/search.py read vaswani2017 --section "Results"
 
-# Read summary
-python src/search.py summary dosovitskiy2020
+# Read AI summary
+python src/search.py summary vaswani2017
 
-# Verify a citation
-python src/search.py verify vaswani2017 "Transformers achieved 28.4 BLEU on WMT 2014"
+# Verify a citation claim
+python src/search.py verify vaswani2017 "achieved 28.4 BLEU on WMT 2014"
+
+# Upload papers to Google (for search)
+python src/search.py upload
+```
+
+### Citation Verification
+
+```bash
+# Verify single claim
+python src/search.py verify vaswani2017 "Transformers achieved 28.4 BLEU"
 # ✅ VERIFIED (95% confidence)
 # Quote: "The big transformer model achieves 28.4 BLEU..."
+
+# Check all citations in LaTeX files
+python src/citation_checker.py ./chapters ./references.bib
+
+# Quick check (keys only, skip claim verification)
+python src/citation_checker.py ./chapters ./references.bib --no-verify
+
+# JSON output (for CI)
+python src/citation_checker.py ./chapters ./references.bib --json
 ```
 
 ### Writing with Claude Code
 
-Claude can use these CLI tools directly:
+```bash
+cd ~/thesis
+claude
+```
+
+Example session:
 
 ```
-You: "Find papers about attention in vision transformers and help me write a related work paragraph"
+You: Find papers about vision transformers
 
-Claude: Let me search the papers...
-        [runs: python src/search.py find "attention vision transformers"]
-        
-        Found dosovitskiy2020 as most relevant. Reading it...
-        [runs: python src/search.py read dosovitskiy2020]
+Claude: [runs: python search.py find "vision transformers"]
+        Found 3 relevant papers:
+        1. dosovitskiy2020 (0.94) - Vision Transformer architecture
+        2. liu2021-swin (0.89) - Hierarchical vision transformer
+        ...
+
+You: Read the dosovitskiy paper and help me write about their approach
+
+Claude: [runs: python search.py read dosovitskiy2020]
+        [reads full markdown]
         
         Here's a paragraph for your related work:
         
-        "Vision Transformers (ViT) demonstrated that pure transformer 
-        architectures can achieve state-of-the-art results on image 
-        classification \cite{dosovitskiy2020image}..."
-        
-        Let me verify this citation...
-        [runs: python src/search.py verify dosovitskiy2020 "pure transformer..."]
-        ✅ Verified
+        "Dosovitskiy et al. demonstrated that pure transformer 
+        architectures can match CNN performance on image classification
+        when trained on sufficient data \cite{dosovitskiy2020vit}..."
+
+You: Verify that citation before I commit
+
+Claude: [runs: python search.py verify dosovitskiy2020 "match CNN performance"]
+        ✅ VERIFIED (92% confidence)
 ```
 
-## AI Session Capture (Entire)
+### AI Session Capture (Entire)
 
-Every commit captures the AI conversation that produced it. Essential for academic work where you need to trace reasoning.
-
-### Why This Matters
-
-When your supervisor asks "why did you phrase it this way?" or "how did you find this citation?", you can show exactly what Claude suggested and why.
-
-### Commands
+Every commit captures the AI conversation that produced it:
 
 ```bash
-# See what AI session produced a commit
+# See AI reasoning behind a commit
 entire explain --commit HEAD
 
-# Explain a specific commit
-entire explain --commit abc1234
-
-# Browse all captured sessions
+# Browse all captured sessions  
 entire rewind
 
-# Check capture status
+# Check status
 entire status
 ```
 
-### What Gets Captured
-
-- Full conversation with Claude Code
-- Tool calls (paper searches, reads, verifications)
-- Claude's reasoning for suggestions
-- Linked to the exact commit via checkpoint ID
-
-### Example
+Example output:
 
 ```bash
 $ entire explain --commit HEAD
@@ -224,90 +282,119 @@ Reasoning: "Based on the original transformer paper, I added
 a comparison table showing BLEU scores across model sizes..."
 ```
 
-## Citation Verification
-
-The workflow includes automatic citation checking to prevent hallucinated or incorrect citations.
-
-### Git Hooks
-
-Install the pre-commit hook to catch issues before they're committed:
+### Watcher Service Management
 
 ```bash
-cp hooks/pre-commit .git/hooks/
-chmod +x .git/hooks/pre-commit
+# Check status
+launchctl list | grep research-workflow
+
+# View logs
+tail -f logs/watcher.log
+tail -f logs/watcher.error.log
+
+# Stop service
+launchctl unload ~/Library/LaunchAgents/com.research-workflow.watcher.plist
+
+# Start service
+launchctl load ~/Library/LaunchAgents/com.research-workflow.watcher.plist
+
+# Uninstall completely
+./scripts/uninstall-watcher.sh
 ```
 
-**What it checks:**
-- Every `\cite{key}` has a matching entry in `.bib`
-- Optionally verifies claims against paper content (set `VERIFY_CLAIMS=1`)
+## Project Structure
 
-### On-Demand Verification
+```
+research-workflow/
+├── config.yaml              # Your configuration (git-ignored)
+├── config.example.yaml      # Configuration template
+├── requirements.txt         # Python dependencies
+├── SKILL.md                 # Quick reference for Claude
+│
+├── papers/                  # Raw PDFs (Zotero/ZotFile managed)
+├── markdown/                # Converted markdown (full papers)
+├── summaries/               # AI-generated summaries
+├── logs/                    # Watcher service logs
+│
+├── hooks/
+│   ├── pre-commit           # Blocks invalid citations
+│   └── post-commit          # Async claim verification
+│
+├── scripts/
+│   ├── install-watcher.sh   # Install macOS launchd service
+│   └── uninstall-watcher.sh # Remove service
+│
+└── src/
+    ├── search.py            # Main CLI (find/read/verify)
+    ├── watcher.py           # PDF watcher + processor
+    ├── converter.py         # Marker PDF→MD wrapper
+    ├── summarizer.py        # Claude summarization
+    ├── citation_checker.py  # Citation verification
+    └── google_search.py     # Google File Search client
+```
 
-Verify any claim before finalizing a citation:
+## Environment Variables
+
+Set these in your shell profile (`~/.zshrc` or `~/.bashrc`):
 
 ```bash
-python src/search.py verify vaswani2017 "Transformers achieved 28.4 BLEU on WMT 2014"
+export ANTHROPIC_API_KEY="sk-ant-..."
+export GOOGLE_API_KEY="..."
+export GOOGLE_CLOUD_PROJECT="your-project-id"
 
-# ✅ VERIFIED
-# Confidence: 95%
-#
-# Claim:
-#   Transformers achieved 28.4 BLEU on WMT 2014
-#
-# Supporting quote:
-#   "The big transformer model achieves 28.4 BLEU on the WMT 2014 
-#   English-to-German translation task"
-#
-# Notes: Exact match found in Results section
+# Optional: Override default paths
+export THESIS_PAPERS_DIR="$HOME/Papers"
+export THESIS_MARKDOWN_DIR="$HOME/thesis/research-workflow/markdown"
+export THESIS_SUMMARIES_DIR="$HOME/thesis/research-workflow/summaries"
 ```
 
-### CLI Usage
+## Troubleshooting
+
+### Watcher not processing files
 
 ```bash
-# Quick check: verify all citation keys exist
-python src/citation_checker.py ./chapters ./references.bib --no-verify
+# Check if running
+launchctl list | grep research-workflow
 
-# Full check: verify claims against papers (slower)
-python src/citation_checker.py ./chapters ./references.bib --markdown-dir ./markdown
+# Check logs for errors
+cat logs/watcher.error.log
 
-# JSON output for CI
-python src/citation_checker.py ./chapters ./references.bib --json
+# Test manually
+python src/watcher.py --once
 ```
 
-## Folder Structure
+### Marker conversion fails
 
-```
-thesis-workflow/
-├── papers/              # Raw PDFs (Zotero/ZotFile managed)
-├── markdown/            # Converted markdown (full papers)
-├── summaries/           # AI-generated summaries
-├── hooks/               # Git hooks for citation verification
-│   ├── pre-commit       # Blocks commits with missing citations
-│   └── post-commit      # Async full verification
-├── src/
-│   ├── watcher.py       # PDF watcher + processor
-│   ├── search.py        # CLI for search/read/verify
-│   ├── converter.py     # Marker PDF→MD wrapper
-│   ├── summarizer.py    # Claude summarization
-│   ├── citation_checker.py  # Citation verification
-│   └── google_search.py # Google File Search client
-├── config.yaml          # Your configuration
-├── config.example.yaml  # Template
-├── requirements.txt
-├── SKILL.md             # Quick reference for Claude
-└── README.md
+```bash
+# Ensure Marker is installed
+uv tool install marker-pdf
+
+# Test on single file
+marker_single path/to/paper.pdf --output_dir ./test/
 ```
 
-## Configuration
+### Google search not working
 
-See `config.example.yaml` for all options:
+```bash
+# Check authentication
+gcloud auth application-default print-access-token
 
-- `watch_dir`: Where PDFs land (Zotero/ZotFile target)
-- `markdown_dir`: Converted markdown output
-- `summary_dir`: AI summaries output
-- `anthropic_api_key`: For summarization
-- `google_project_id`: For Vertex AI Search
-- `google_corpus_id`: Your paper corpus
+# Verify API is enabled
+gcloud services list --enabled | grep aiplatform
+```
+
+### Citation verification fails
+
+```bash
+# Check paper exists
+python src/search.py list
+
+# Check markdown was generated
+ls -la markdown/
+
+# Run with debug output
+python src/citation_checker.py ./chapters ./refs.bib 2>&1 | head -50
+```
 
 ## License
 

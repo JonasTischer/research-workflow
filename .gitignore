@@ -17,6 +17,9 @@ venv/
 .venv/
 env/
 .env
+*.egg-info/
+dist/
+build/
 
 # IDE
 .idea/
@@ -28,3 +31,6 @@ env/
 # Marker output artifacts
 *.png
 *.jpg
+
+# Citation check logs
+.citation-check.log

@@ -1,0 +1,52 @@
+[project]
+name = "research-workflow"
+version = "0.1.0"
+description = "AI-powered research paper management for academic writing"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Jonas Tischer", email = "jonas.tischer@googlemail.com" }
+]
+keywords = ["research", "thesis", "citations", "ai", "claude", "academic"]
+
+dependencies = [
+    "marker-pdf>=0.2.0",
+    "pymupdf>=1.23.0",
+    "watchdog>=3.0.0",
+    "anthropic>=0.18.0",
+    "google-cloud-aiplatform>=1.38.0",
+    "google-generativeai>=0.3.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+research-search = "src.search:main"
+research-watch = "src.watcher:main"
+research-verify = "src.citation_checker:main"
+
+[project.urls]
+Repository = "https://github.com/JonasTischer/research-workflow"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

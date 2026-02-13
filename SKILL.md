@@ -1,17 +1,27 @@
-# Thesis Workflow Skill
+# Research Workflow Skill
 
 AI-powered research paper management for academic writing.
 
-## Setup
+## Quick Setup
 
 ```bash
-cd /path/to/thesis-workflow
-pip install -r requirements.txt
-cp config.example.yaml config.yaml
-# Edit config.yaml with your paths
+# Clone
+git clone https://github.com/JonasTischer/research-workflow.git
+cd research-workflow
 
-# Initialize Entire for session capture
+# Install with uv
+uv venv && source .venv/bin/activate
+uv pip install -r requirements.txt
+
+# Configure
+cp config.example.yaml config.yaml
+# Edit config.yaml
+
+# Initialize Entire
 entire init
+
+# Start watcher service
+./scripts/install-watcher.sh
 ```
 
 ## Commands
@@ -19,84 +29,56 @@ entire init
 ### AI Session Tracing (Entire)
 
 ```bash
-# See AI reasoning behind a commit
-entire explain --commit HEAD
-
-# Browse captured sessions
-entire rewind
-
-# Check status
-entire status
+entire explain --commit HEAD   # See AI reasoning
+entire rewind                  # Browse sessions
+entire status                  # Check status
 ```
 
-### Paper Management
+### Paper Search & Read
 
 ```bash
-# Watch for new PDFs and process automatically
-python src/watcher.py
-
-# Process existing PDFs once
-python src/watcher.py --once
-
-# Upload papers to Google for search indexing
-python src/search.py upload
-```
-
-### Search & Read
-
-```bash
-# Search for relevant papers
-python src/search.py find "attention mechanisms in transformers"
-
-# List all papers in library
-python src/search.py list
-
-# Read full paper
-python src/search.py read vaswani2017
-
-# Read specific section
-python src/search.py read vaswani2017 --section "Results"
-
-# Read AI-generated summary
-python src/search.py summary vaswani2017
+python src/search.py find "query"              # Semantic search
+python src/search.py list                       # List all papers
+python src/search.py read <name>                # Full paper
+python src/search.py read <name> -s "Results"   # Specific section
+python src/search.py summary <name>             # AI summary
 ```
 
 ### Citation Verification
 
 ```bash
-# Verify a specific claim
-python src/search.py verify vaswani2017 "Transformers achieved 28.4 BLEU"
+# Verify single claim
+python src/search.py verify <paper> "claim"
 
-# Check all citations in LaTeX files
-python src/citation_checker.py ./chapters ./references.bib --markdown-dir ./markdown
+# Check all LaTeX citations
+python src/citation_checker.py ./chapters ./refs.bib
 
-# Quick check (keys only, no claim verification)
-python src/citation_checker.py ./chapters ./references.bib --no-verify
+# Quick check (keys only)
+python src/citation_checker.py ./chapters ./refs.bib --no-verify
 ```
 
-## Workflow
+### Watcher Service
 
-1. **Find paper** → Add to Zotero → PDF auto-saves to `papers/`
-2. **Watcher detects** → Converts to markdown → Generates summary → Uploads to Google
-3. **Writing** → Search papers → Read relevant ones → Write with citations
-4. **Before commit** → Pre-commit hook verifies all citations
+```bash
+python src/watcher.py --once           # Process existing
+./scripts/install-watcher.sh           # Install service
+launchctl list | grep research         # Check status
+tail -f logs/watcher.log               # View logs
+./scripts/uninstall-watcher.sh         # Remove service
+```
 
 ## Environment Variables
 
 ```bash
-export THESIS_DIR=/path/to/thesis-workflow
-export THESIS_PAPERS_DIR=/path/to/papers
-export THESIS_MARKDOWN_DIR=/path/to/markdown
-export THESIS_SUMMARIES_DIR=/path/to/summaries
-export ANTHROPIC_API_KEY=sk-ant-...
-export GOOGLE_API_KEY=...
+export ANTHROPIC_API_KEY="sk-ant-..."
+export GOOGLE_API_KEY="..."
+export GOOGLE_CLOUD_PROJECT="your-project"
 ```
 
-## Git Hooks
+## Workflow
 
-Install pre-commit hook to catch citation issues:
-
-```bash
-cp hooks/pre-commit .git/hooks/
-chmod +x .git/hooks/pre-commit
-```
+1. Add paper to Zotero → PDF auto-saves → Watcher converts to markdown
+2. `search.py find` → discover relevant papers
+3. `search.py read` → get full content
+4. Write with Claude → verify citations → commit
+5. Entire captures the AI reasoning

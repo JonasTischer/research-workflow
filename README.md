@@ -97,12 +97,20 @@ This hooks into git to capture Claude Code sessions on every commit.
 ### 7. Start the Watcher
 
 ```bash
-# Process existing papers and watch for new ones
-python src/watcher.py
-
-# Or just process existing papers once
+# One-time: process existing papers
 python src/watcher.py --once
+
+# Run as background service (auto-starts on login)
+./scripts/install-watcher.sh
+
+# Check it's running
+launchctl list | grep research-workflow
+
+# View logs
+tail -f logs/watcher.log
 ```
+
+The watcher runs automatically on Mac login. When you add a paper to Zotero, it auto-converts to markdown and generates a summary.
 
 ## Usage
 

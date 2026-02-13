@@ -81,13 +81,22 @@ python src/search.py find "attention mechanisms"    # Semantic search
 
 ### Verify Citations
 
-**Always verify before citing:**
-
+**Option 1: Quick verification**
 ```bash
-python src/search.py verify vaswani2017 "achieved 28.4 BLEU on WMT 2014"
-# ✅ VERIFIED (95% confidence)
-# Quote: "The big transformer model achieves 28.4 BLEU..."
+# Claude Code reads the paper and verifies directly
+cat markdown/vaswani2017.md  # Read paper
+# Then ask Claude to verify your claim
 ```
+
+**Option 2: Verification subagent** (thorough)
+```bash
+./scripts/verify-claim.sh vaswani2017 "achieved 28.4 BLEU on WMT 2014"
+```
+
+Returns:
+- ✅ VERIFIED — claim is accurate
+- ⚠️ NEEDS REVISION — needs changes
+- ❌ INCORRECT — doesn't match paper
 
 ### Batch Verification
 

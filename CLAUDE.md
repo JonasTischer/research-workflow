@@ -114,8 +114,26 @@ If you can't verify → say so, suggest alternatives, or recommend reading a spe
 2. **Download** → `python src/download.py arxiv "id"`
 3. **Read** → `cat markdown/paper_name.md`
 4. **Write** → Draft paragraph with citation
-5. **Verify** → Re-read paper, confirm claim matches
+5. **Verify** → Use verification subagent (see below)
 6. **Commit** → Entire captures your reasoning
+
+## Verification Subagent
+
+For thorough citation verification, spawn a dedicated subagent:
+
+```bash
+./scripts/verify-claim.sh vaswani2017 "achieved 28.4 BLEU on WMT 2014"
+```
+
+Or spawn directly:
+```bash
+claude --print "Verify: [claim] against [paper]. Follow agents/verifier/CLAUDE.md"
+```
+
+The verifier returns:
+- ✅ VERIFIED — claim is accurate
+- ⚠️ NEEDS REVISION — partially correct, needs changes
+- ❌ INCORRECT — claim doesn't match paper
 
 ## Citation Rules
 
